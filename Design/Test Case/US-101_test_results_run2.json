@@ -1,0 +1,167 @@
+{
+ "version": "Office Food Ordering v1.0.1 (US-101)",
+ "ov": {
+  "steps": 52,
+  "bad": [],
+  "atTotal": {
+   "display": "block",
+   "visibility": "hidden",
+   "opacity": "0",
+   "hidden": false,
+   "inert": false,
+   "tabindex": "-1",
+   "ariaHidden": "true"
+  },
+  "overlap": false,
+  "pillVisibleAtTop": true
+ },
+ "results": [
+  {
+   "tc": "TC-01",
+   "status": "Pass",
+   "expected": "10 รายการ ตามลำดับ sort_order ชื่อ/ราคาตรง CSV",
+   "actual": "10 รายการ: 1:55.00 บาท, 2:65.00 บาท, 3:70.00 บาท, 4:50.00 บาท, 5:45.50 บาท, 6:89.75 บาท, 7:120.00 บาท, 8:1.00 บาท, 9:35.00 บาท, 10:1,250.00 บาท",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-02",
+   "status": "Pass",
+   "expected": "id 11,12 ไม่แสดง",
+   "actual": "ids แสดง: 1,2,3,4,5,6,7,8,9,10",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-03",
+   "status": "Pass",
+   "expected": "รายการไม่มีรูป/ไม่มี category แสดงได้ ไม่มีรูปแตก",
+   "actual": "id4 placeholder=true, id9 cat=\"\" price=35.00 บาท, รูปแตก=0",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-04",
+   "status": "Pass",
+   "expected": "1.00 / 1,250.00 / 45.50 / 89.75",
+   "actual": "1.00 บาท / 1,250.00 บาท / 45.50 บาท / 89.75 บาท",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-05",
+   "status": "Pass",
+   "expected": "ชื่อยาว/อักขระพิเศษแสดงครบ ไม่ล้น",
+   "actual": "[{\"sw\":136,\"cw\":136,\"cardOver\":false},{\"sw\":136,\"cw\":136,\"cardOver\":false}] name6=\"ไก่ทอดหาดใหญ่ (3 ชิ้น) & ข้าวเหนียว\"",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-06",
+   "status": "Pass",
+   "expected": "ยังไม่มีรายการ, 0 ชิ้น, 0.00 บาท",
+   "actual": "ยังไม่มีรายการ, 0 ชิ้น, 0.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-07",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 1 = 55.00 บาท; รวม 1 ชิ้น 55.00 บาท",
+   "actual": "id1: 55.00 บาท x 1 = 55.00 บาท; รวม 1 ชิ้น 55.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-08",
+   "status": "Pass",
+   "expected": "id2: 65.00 บาท x 3 = 195.00 บาท; รวม 3 ชิ้น 195.00 บาท",
+   "actual": "id2: 65.00 บาท x 3 = 195.00 บาท; รวม 3 ชิ้น 195.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-09",
+   "status": "Pass",
+   "expected": "id8: 1.00 บาท x 10 = 10.00 บาท; รวม 10 ชิ้น 10.00 บาท",
+   "actual": "id8: 1.00 บาท x 10 = 10.00 บาท; รวม 10 ชิ้น 10.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-10",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 2 = 110.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id5: 45.50 บาท x 3 = 136.50 บาท; รวม 6 ชิ้น 316.50 บาท",
+   "actual": "id1: 55.00 บาท x 2 = 110.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id5: 45.50 บาท x 3 = 136.50 บาท; รวม 6 ชิ้น 316.50 บาท",
+   "ev": "TC-10_desktop.png"
+  },
+  {
+   "tc": "TC-11",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 3 = 165.00 บาท; id2: 65.00 บาท x 2 = 130.00 บาท; รวม 5 ชิ้น 295.00 บาท",
+   "actual": "id1: 55.00 บาท x 3 = 165.00 บาท; id2: 65.00 บาท x 2 = 130.00 บาท; รวม 5 ชิ้น 295.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-12",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 1 = 55.00 บาท; id2: 65.00 บาท x 1 = 65.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id4: 50.00 บาท x 1 = 50.00 บาท; id5: 45.50 บาท x 1 = 45.50 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; id7: 120.00 บาท x 1 = 120.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; id9: 35.00 บาท x 1 = 35.00 บาท; id10: 1,250.00 บาท x 1 = 1,250.00 บาท; รวม 10 ชิ้น 1,781.25 บาท",
+   "actual": "id1: 55.00 บาท x 1 = 55.00 บาท; id2: 65.00 บาท x 1 = 65.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id4: 50.00 บาท x 1 = 50.00 บาท; id5: 45.50 บาท x 1 = 45.50 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; id7: 120.00 บาท x 1 = 120.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; id9: 35.00 บาท x 1 = 35.00 บาท; id10: 1,250.00 บาท x 1 = 1,250.00 บาท; รวม 10 ชิ้น 1,781.25 บาท",
+   "ev": "TC-12_all.png"
+  },
+  {
+   "tc": "TC-13",
+   "status": "Pass",
+   "expected": "id5: 45.50 บาท x 2 = 91.00 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; รวม 3 ชิ้น 180.75 บาท",
+   "actual": "id5: 45.50 บาท x 2 = 91.00 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; รวม 3 ชิ้น 180.75 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-14",
+   "status": "Pass",
+   "expected": "id10: 1,250.00 บาท x 2 = 2,500.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; รวม 3 ชิ้น 2,501.00 บาท",
+   "actual": "id10: 1,250.00 บาท x 2 = 2,500.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; รวม 3 ชิ้น 2,501.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-15",
+   "status": "Pass",
+   "expected": "รีเฟรชแล้วว่าง 0.00 บาท",
+   "actual": "lines=0, 0 ชิ้น, 0.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-16",
+   "status": "Pass",
+   "expected": "360px ทำ TC-07, TC-10 ได้ ไม่ล้นแนวนอน",
+   "actual": "TC-07 lines=1 55.00 บาท; TC-10 lines=3 316.50 บาท; overflowX=false; BUG-001: ตรวจ 52 ตำแหน่งเลื่อน พบปุ่มทับ=0; ตอนเห็นยอดรวม ปุ่ม={\"display\":\"block\",\"visibility\":\"hidden\",\"opacity\":\"0\",\"hidden\":false,\"inert\":false,\"tabindex\":\"-1\",\"ariaHidden\":\"true\"}; ปุ่มแสดงตอนอยู่บนสุด=true",
+   "ev": "TC-16_mobile360_full.png, TC-16_mobile360_total.png, TC-16_mobile360_top_pill.png"
+  },
+  {
+   "tc": "TC-17",
+   "status": "Pass",
+   "expected": "1280px ทำ TC-10 ได้ ไม่ล้นแนวนอน",
+   "actual": "lines=3, 316.50 บาท, overflowX=false",
+   "ev": "TC-10_desktop.png"
+  },
+  {
+   "tc": "TC-18",
+   "status": "Pass",
+   "expected": "ไม่มี console error",
+   "actual": "errors=0 ; warnings=0 ",
+   "ev": ""
+  },
+  {
+   "tc": "TC-18b",
+   "status": "Pass",
+   "expected": "(ตรวจ OBS-01) เมื่อโหลดเมนูล้มเหลว ต้องมี console.error และข้อความแจ้งผู้ใช้",
+   "actual": "console.error=[\"Failed to load resource: net::ERR_FAILED\",\"โหลดเมนูไม่สำเร็จ: Failed to fetch\"]; ข้อความ=\"⚠️ ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้งลองใหม่\"",
+   "ev": "OBS-01_load_error.png"
+  },
+  {
+   "tc": "TC-19",
+   "status": "Pass",
+   "expected": "DB ปฏิเสธ price = 0",
+   "actual": "insert price 0 ถูกปฏิเสธ (menu_items_price_check, 23514); constraint ยังอยู่",
+   "ev": "ผล SQL จาก Supabase"
+  },
+  {
+   "tc": "TC-20",
+   "status": "Pass",
+   "expected": "id 1 หายเมื่อปิด และกลับมาเมื่อคืนค่า",
+   "actual": "ปิด: 2–10; คืนค่าแล้ว DB available 10 แถว ผลรวม 1,781.25",
+   "ev": "TC-20_id1_off.png"
+  }
+ ]
+}
