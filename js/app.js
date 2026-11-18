@@ -18,8 +18,8 @@ async function loadMenu() {
     if (menu.length === 0) return showMenuState("empty");
     renderMenu();
   } catch (err) {
-    // log แบบ warn เพื่อไม่ให้นับเป็น error ใน console เมื่อเป็นปัญหาเครือข่ายชั่วคราว
-    console.warn("โหลดเมนูไม่สำเร็จ:", err.message);
+    // log เป็น error เพื่อให้เห็นชัดใน console เมื่อโหลดเมนูไม่สำเร็จ (ผู้ใช้เห็นข้อความภาษาไทยบนหน้าจอ)
+    console.error("โหลดเมนูไม่สำเร็จ:", err.message);
     showMenuState("error", navigator.onLine === false ? "ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่" : "ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง");
   }
 }
@@ -73,9 +73,23 @@ function renderSummary() {
     </li>`).join("");
 }
 
+// BUG-001: ซ่อนปุ่มลอย 🛒 เมื่อส่วนสรุปรายการ (#summary) อยู่บนจอ เพื่อไม่ให้บังจำนวนรวม/ราคารวม
+function setupCartPill() {
+  const pill = document.querySelector(".cart-pill");
+  const summary = $("summary");
+  if (!pill || !summary || !("IntersectionObserver" in window)) return;
+  new IntersectionObserver((entries) => {
+    const visible = entries.some((e) => e.isIntersecting);
+    pill.classList.toggle("is-hidden", visible);
+    pill.setAttribute("aria-hidden", visible ? "true" : "false");
+    pill.tabIndex = visible ? -1 : 0;
+  }, { threshold: 0 }).observe(summary);
+}
+
 $("app-name").textContent = APP_NAME;
 $("app-version").textContent = `${APP_NAME} v${APP_VERSION} (${APP_STORY})`;
 document.title = APP_NAME;
 renderSummary();
+setupCartPill();
 if (SUPABASE_URL.startsWith("__")) showMenuState("error", "ระบบยังตั้งค่าการเชื่อมต่อฐานข้อมูลไม่ครบ กรุณาแจ้งผู้ดูแล");
 else loadMenu();

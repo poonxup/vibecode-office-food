@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1 — 2026-11-18 — US-101 fix round 1 (req v1.1)
+- BUG-001 (AC7/TC-16, Low): ปุ่มลอย 🛒 บนจอมือถือ (≤820px) บังจำนวนรวม/ราคารวมในสรุป → ซ่อนปุ่มอัตโนมัติเมื่อส่วนสรุป (#summary) อยู่บนจอ (IntersectionObserver) แสดงกลับเมื่อเลื่อนออก; ตรวจที่ 360/390/1280px ไม่มีตำแหน่งเลื่อนใดที่ปุ่มบังยอดรวม
+- js/app.js: log เมื่อโหลดเมนูไม่สำเร็จเปลี่ยนจาก console.warn เป็น console.error
+- เผยแพร่โฟลเดอร์ Design/ ทั้งหมด (Story, Data Model, Test Cases/Results, Bug Reports, evidence, data) บน URL Production
+
 ## v1.0.0 — 2026-11-18 — US-101 (req v1.1)
 - หน้าเมนูอาหาร: อ่านจาก Supabase `menu_items` เฉพาะ `is_available = true` เรียงตาม `sort_order, id` (AC1)
 - เลือกเมนู: กดครั้งแรก = 1, กดซ้ำเพิ่มในบรรทัดเดิม, 1 เมนู = 1 บรรทัด (AC2–AC4)
