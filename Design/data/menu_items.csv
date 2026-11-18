@@ -1,0 +1,13 @@
+id,name,price,category,image_url,is_available,sort_order
+1,ข้าวกะเพราหมูสับไข่ดาว,55,ข้าว,https://placehold.co/300x200?text=Kaprao,true,1
+2,ข้าวผัดกุ้ง,65,ข้าว,https://placehold.co/300x200?text=FriedRice,true,2
+3,ผัดไทยกุ้งสด,70,เส้น,https://placehold.co/300x200?text=PadThai,true,3
+4,ก๋วยเตี๋ยวเรือ,50,เส้น,,true,4
+5,ส้มตำไทย,45.5,อีสาน,https://placehold.co/300x200?text=Somtam,true,5
+6,ไก่ทอดหาดใหญ่ (3 ชิ้น) & ข้าวเหนียว,89.75,อีสาน,,true,6
+7,ข้าวมันไก่ต้ม-ทอด ผสม พิเศษ เพิ่มเลือด เพิ่มตับ ไม่ใส่ผักชี (ชื่อยาวมากเพื่อทดสอบการตัดบรรทัด),120,ข้าว,https://placehold.co/300x200?text=ChickenRice,true,7
+8,น้ำเปล่า,1,เครื่องดื่ม,,true,8
+9,ชาไทยเย็น,35,,https://placehold.co/300x200?text=ThaiTea,true,9
+10,ชุดสุกี้รวมมิตร (Party Set),1250,ชุด,https://placehold.co/300x200?text=Suki,true,10
+11,ต้มยำกุ้งน้ำข้น (หมดชั่วคราว),150,แกง,,false,11
+12,แกงเขียวหวานไก่ (หมดชั่วคราว),60,แกง,,false,12
