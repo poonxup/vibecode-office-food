@@ -8,19 +8,34 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // อ่านเมนูจาก Supabase ตาราง menu_items เฉพาะ is_available = true เรียงตาม sort_order (AC1)
+// v1.0.3 (SQLI-06): ข้อความ error ดิบจาก PostgREST/Supabase (อาจมีชื่อคอลัมน์/ชนิดข้อมูล) ห้ามแสดงบนหน้าจอ
+//   ผู้ใช้เห็นเฉพาะข้อความภาษาไทยแบบทั่วไป รายละเอียดเขียนลง console.error เท่านั้น
+const MSG_LOAD_FAILED = "ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
+const MSG_OFFLINE = "ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่";
+
 async function loadMenu() {
   showMenuState("loading");
   try {
     const url = `${SUPABASE_URL}/rest/v1/menu_items?select=id,name,price,category,image_url,is_available,sort_order&is_available=eq.true&order=sort_order.asc,id.asc`;
     const res = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    menu = await res.json();
+    if (!res.ok) {
+      // เก็บรายละเอียดจากเซิร์ฟเวอร์ไว้ใน error เพื่อ log เท่านั้น (ไม่ส่งต่อไปที่ DOM)
+      let detail = "";
+      try { detail = await res.text(); } catch { /* ignore */ }
+      const e = new Error(`HTTP ${res.status}`);
+      e.detail = detail;
+      throw e;
+    }
+    const data = await res.json();
+    if (!Array.isArray(data)) throw Object.assign(new Error("รูปแบบข้อมูลไม่ถูกต้อง"), { detail: JSON.stringify(data) });
+    menu = data;
     if (menu.length === 0) return showMenuState("empty");
     renderMenu();
   } catch (err) {
-    // log เป็น error เพื่อให้เห็นชัดใน console เมื่อโหลดเมนูไม่สำเร็จ (ผู้ใช้เห็นข้อความภาษาไทยบนหน้าจอ)
-    console.error("โหลดเมนูไม่สำเร็จ:", err.message);
-    showMenuState("error", navigator.onLine === false ? "ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่" : "ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง");
+    // รายละเอียด (สถานะ HTTP / ข้อความจาก PostgREST) ไปที่ console.error เท่านั้น
+    console.error("โหลดเมนูไม่สำเร็จ:", err && err.message, err && err.detail ? err.detail : "");
+    // หน้าจอแสดงเฉพาะข้อความทั่วไปที่กำหนดไว้ ไม่ใช้ข้อความจาก err
+    showMenuState("error", navigator.onLine === false ? MSG_OFFLINE : MSG_LOAD_FAILED);
   }
 }
 

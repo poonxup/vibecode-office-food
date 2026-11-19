@@ -1,7 +1,7 @@
 # Office Food Ordering
 
 Web App สั่งอาหารในออฟฟิศ: แสดงเมนู + ราคา (บาท) ให้เลือก และแสดงสรุปรายการที่สั่ง
-เวอร์ชัน **1.0.2** — US-101 (req v1.1) + security fixes
+เวอร์ชัน **1.0.3** — US-101 (req v1.1) + security fixes
 
 - Hosting: Vercel (static site, ไม่มี build) — project `vibecode-office-food`, team rattakorn-1187
 - Database: Supabase project `vibecode-office-food` (ref `yhcjsgbffgabsmsybnle`, ap-southeast-1), schema `public`
@@ -17,8 +17,9 @@ js/app.js             โหลดเมนูจาก Supabase REST, แสด
 db/001_*.sql          โครงสร้างตาราง + RLS + comment
 db/002_*.sql          ข้อมูลตัวอย่าง (categories apply แล้ว, menu_items ไม่ apply)
 db/003_*.sql          ถอนสิทธิ์เขียนจาก anon/authenticated (เหลือ SELECT) — v1.0.2
+db/004_*.sql          RLS: menu_items อ่านได้เฉพาะ is_available = true; ปิดการอ่าน categories / menu_item_categories — v1.0.3
 vercel.json           Security headers ทุก route (CSP แอป / CSP แยกสำหรับ /Design/*, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS)
-.vercelignore         ไฟล์ที่ไม่ deploy (db/, Design/Test Case/scripts/, tester/)
+.vercelignore         ไฟล์ที่ไม่ deploy (db/, Design/Test Case/scripts/, Design/Teaching/, tester/)
 Design/               เอกสารโครงการ (Story, Data Model, Mock Data, Test Cases/Results, Bug Reports)
 CHANGELOG.md          ประวัติเวอร์ชัน
 ```
@@ -43,6 +44,8 @@ python3 -m http.server 8080   # แล้วเปิด http://localhost:8080
 - CSP ไม่อนุญาต inline script: ห้ามใส่ `onclick=`/`onerror=` หรือ `<script>` แบบ inline ใน HTML ให้ผูก event ใน `js/app.js` ด้วย `addEventListener`
 - ถ้าเพิ่มโดเมนภายนอก (API, ฟอนต์, สคริปต์) ต้องแก้ CSP ใน `vercel.json`
 - ฐานข้อมูล: หน้าเว็บอ่านได้อย่างเดียว ทั้งระดับ RLS และระดับ GRANT
+- (v1.0.3) anon อ่านได้เฉพาะเมนูที่ is_available = true (บังคับที่ RLS) และอ่าน categories / menu_item_categories ไม่ได้
+- (v1.0.3) ห้ามแสดงข้อความ error ดิบจากเซิร์ฟเวอร์บนหน้าจอ ให้ใช้ข้อความไทยทั่วไป และ log รายละเอียดที่ console.error
 
 ## ฐานข้อมูล
 

@@ -85,6 +85,8 @@ PK = (menu_item_id, category_id) → ผูกเมนูกับหมวด�
 
 - เปิด Row Level Security ทั้ง 3 ตาราง
 - Policy: `SELECT` อย่างเดียว สำหรับ role `anon`, `authenticated` (หน้าเว็บอ่านได้อย่างเดียว)
+- (v1.0.3, `db/004`) `menu_items_read` ใช้ `using (is_available = true)`: ผ่าน REST เห็นเฉพาะเมนูที่มีขาย แถว false มองไม่เห็นเลย (เจ้าของโปรเจกต์ยังแก้/เปิด-ปิดได้ตามปกติ)
+- (v1.0.3, `db/004`) `categories`, `menu_item_categories`: ลบ policy SELECT และ REVOKE SELECT จาก anon/authenticated (US-101 ยังไม่ใช้) — เมื่อมี Story ที่ใช้ M:N ให้ `GRANT SELECT ... TO anon, authenticated` และสร้าง policy SELECT ใหม่
 - ไม่มี policy INSERT/UPDATE/DELETE → publishable key ในหน้าเว็บแก้ข้อมูลไม่ได้ (ทดสอบแล้ว: POST ได้ 401 / 42501)
 - การเพิ่ม/แก้ข้อมูลทำผ่าน Supabase Dashboard หรือ SQL Editor (สิทธิ์เจ้าของโปรเจกต์)
 - (v1.0.2, `db/003`) สิทธิ์ระดับตาราง: ถอน INSERT/UPDATE/DELETE/TRUNCATE/TRIGGER/REFERENCES จาก anon, authenticated เหลือ **SELECT อย่างเดียว** เป็นชั้นป้องกันที่สองนอกจาก RLS

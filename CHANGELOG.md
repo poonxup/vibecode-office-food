@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.3 — 2026-11-19 — US-101 web security fixes (ตามรายงาน 204 US-101_web_security_review_v1.0 / US-101_sqli_test_v1.0) — ไม่มีการเปลี่ยน feature/AC
+- AUTHZ-01 (WSR-12/WSR-32): db/004 — policy menu_items_read เปลี่ยนเป็น using (is_available = true) anon/authenticated อ่านเมนูที่ซ่อนผ่าน REST ไม่ได้อีก (migration us101_rls_tighten_read)
+- AUTHZ-02 (WSR-13): db/004 — ลบ policy SELECT และ REVOKE SELECT ของ anon/authenticated บน categories, menu_item_categories (UI ยังไม่ใช้) RLS ยังเปิด
+- SQLI-06 (WSR-38): js/app.js — ข้อความ error ดิบจาก PostgREST/Supabase ไม่แสดงบนหน้าจอ ผู้ใช้เห็นข้อความไทยทั่วไป รายละเอียด log ที่ console.error เท่านั้น ปุ่ม "ลองใหม่" ทำงานเหมือนเดิม
+- WSR-04: .vercelignore เพิ่ม Design/Teaching/ (เก็บใน git ไม่เผยแพร่บน Production)
+
 ## v1.0.2 — 2026-11-19 — US-101 security fixes (ตามรายงาน 204 Security Findings v1.0) — ไม่มีการเปลี่ยน feature/AC
 - S-12: db/003_us101_revoke_write_grants.sql — REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER, REFERENCES จาก anon/authenticated ทั้ง 3 ตาราง เหลือ SELECT อย่างเดียว (apply แล้ว, ไม่แก้ข้อมูล)
 - S-04/S-16: ย้าย onerror แบบ inline ของรูปเมนูไปผูกด้วย addEventListener ใน js/app.js (พฤติกรรมเดิม: รูปโหลดไม่ได้ -> เอารูปออก); ปุ่ม "ลองใหม่" ใช้ addEventListener
