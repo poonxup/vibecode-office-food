@@ -34,10 +34,17 @@ python3 -m http.server 8080   # แล้วเปิด http://localhost:8080
 
 ## Deploy
 
-1. แก้ `APP_VERSION` ใน `js/config.js` และเพิ่มบันทึกใน `CHANGELOG.md`
-2. commit ใน git
-3. Deploy ไฟล์ทั้งหมด (รวม `Design/`) ขึ้น Vercel project `vibecode-office-food` target production
-   (เช่น `vercel deploy --prod` หรือ Vercel API) — ไม่มีขั้นตอน build
+Deploy อัตโนมัติจาก GitHub: push เข้า branch `main` ของ `poonxup/vibecode-office-food` แล้ว Vercel Git integration
+จะ deploy ขึ้น Production (project `vibecode-office-food`, https://vibecode-office-food.vercel.app) เอง — ไม่มีขั้นตอน build
+และไม่ต้อง deploy ผ่าน Vercel API อีกต่อไป
+
+1. แก้ `APP_VERSION` ใน `js/config.js` และเพิ่มบันทึกใน `CHANGELOG.md` (ถ้าแก้แค่เอกสาร ไม่ต้องเปลี่ยนเวอร์ชัน)
+2. ตรวจ secret ก่อน commit (ห้ามมี service_role key)
+3. commit แล้ว `git push origin main` → ตรวจสถานะ deployment บน Vercel ให้เป็น READY
+
+หมายเหตุ:
+- Git deploy ใช้ `.vercelignore` จึงไม่ deploy `tester/`, `db/`, `Design/Test Case/scripts/`, `Design/Teaching/` (ยังเก็บใน git)
+- Git deploy ของ commit 33a339a เคยล้มเหลว (errorCode `git_info_fail`) เพราะ Vercel GitHub App ยังไม่มีสิทธิ์เข้าถึง repo — แก้แล้ว (เจ้าของให้สิทธิ์ 2026-11-19)
 
 ## ความปลอดภัย (v1.0.2)
 

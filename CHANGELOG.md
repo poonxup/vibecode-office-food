@@ -1,5 +1,11 @@
 # Changelog
 
+## docs — 2026-11-19 — Deploy อัตโนมัติจาก GitHub (ยังเป็น v1.0.3 ไม่มีการแก้โค้ดแอป/DB)
+- Deploy ขึ้น Production อัตโนมัติเมื่อ push เข้า branch `main` ของ GitHub `poonxup/vibecode-office-food` ผ่าน Vercel Git integration — ไม่ต้อง deploy ผ่าน Vercel API อีกต่อไป
+- ก่อนหน้านี้ Git deploy ของ commit 33a339a ล้มเหลว (errorCode `git_info_fail`) เพราะ Vercel GitHub App ยังไม่มีสิทธิ์เข้าถึง repo — เจ้าของให้สิทธิ์แล้ว (201 ยืนยัน Git deploy ของ 2f7d9fe = READY)
+- Git deploy ใช้ `.vercelignore` จึงไม่ deploy tester/, db/, Design/Test Case/scripts/, Design/Teaching/ (ยังเก็บใน git)
+- เพิ่มผลทดสอบ Run 4 ของ 203 (US-101_test_results_run4_v1.0.html / .json, evidence/run-4/, scripts r4) โดยไม่แก้ไขไฟล์
+
 ## v1.0.3 — 2026-11-19 — US-101 web security fixes (ตามรายงาน 204 US-101_web_security_review_v1.0 / US-101_sqli_test_v1.0) — ไม่มีการเปลี่ยน feature/AC
 - AUTHZ-01 (WSR-12/WSR-32): db/004 — policy menu_items_read เปลี่ยนเป็น using (is_available = true) anon/authenticated อ่านเมนูที่ซ่อนผ่าน REST ไม่ได้อีก (migration us101_rls_tighten_read)
 - AUTHZ-02 (WSR-13): db/004 — ลบ policy SELECT และ REVOKE SELECT ของ anon/authenticated บน categories, menu_item_categories (UI ยังไม่ใช้) RLS ยังเปิด
