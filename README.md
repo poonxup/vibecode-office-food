@@ -17,8 +17,8 @@ js/app.js             โหลดเมนูจาก Supabase REST, แสด
 db/001_*.sql          โครงสร้างตาราง + RLS + comment
 db/002_*.sql          ข้อมูลตัวอย่าง (categories apply แล้ว, menu_items ไม่ apply)
 db/003_*.sql          ถอนสิทธิ์เขียนจาก anon/authenticated (เหลือ SELECT) — v1.0.2
-vercel.json           Security headers ทุก route (CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS)
-.vercelignore         ไฟล์ที่ไม่ deploy (Design/Test Case/scripts/, tester/)
+vercel.json           Security headers ทุก route (CSP แอป / CSP แยกสำหรับ /Design/*, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS)
+.vercelignore         ไฟล์ที่ไม่ deploy (db/, Design/Test Case/scripts/, tester/)
 Design/               เอกสารโครงการ (Story, Data Model, Mock Data, Test Cases/Results, Bug Reports)
 CHANGELOG.md          ประวัติเวอร์ชัน
 ```

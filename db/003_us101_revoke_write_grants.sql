@@ -24,3 +24,22 @@ GRANT SELECT ON public.menu_items, public.categories, public.menu_item_categorie
 --  where table_schema='public' and grantee in ('anon','authenticated')
 --    and table_name in ('menu_items','categories','menu_item_categories') group by 1,2;
 -- ผลที่คาดหวัง: ทุกแถวเหลือ SELECT
+
+-- ---------------------------------------------------------------------
+-- ส่วนที่ 2 (v1.0.2 deploy 2, 2026-11-19) — default privileges สำหรับตารางที่จะสร้างใหม่ในอนาคต
+-- apply เป็น migration แยกชื่อ us101_revoke_default_write_privs
+-- เหตุผล: ค่าเริ่มต้นของ Supabase ทำให้ตารางใหม่ใน schema public ให้สิทธิ์ arwdDxtm
+--   (INSERT, SELECT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) กับ anon/authenticated อัตโนมัติ
+--   คำสั่งนี้ทำให้ตารางใหม่ที่ role postgres สร้าง ได้สิทธิ์ anon/authenticated แค่ SELECT, REFERENCES, TRIGGER, MAINTAIN (rxtm)
+--   (ไม่กระทบตารางที่มีอยู่แล้ว และไม่แก้ข้อมูล)
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLES FROM anon, authenticated;
+-- ผลตรวจ pg_default_acl หลังรัน (role postgres): anon=rxtm/postgres, authenticated=rxtm/postgres  ✔
+
+-- ข้อจำกัด: role supabase_admin เปลี่ยนไม่ได้
+--   ลองรัน: ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLES FROM anon, authenticated;
+--   ผล: ERROR 42501: permission denied to change default privileges
+--   (role ที่ใช้รัน migration คือ postgres ซึ่งไม่ใช่ superuser และไม่ได้เป็นสมาชิกของ supabase_admin)
+--   ค่าของ supabase_admin ยังเป็น anon=arwdDxtm/supabase_admin, authenticated=arwdDxtm/supabase_admin
+--   มีผลเฉพาะตารางที่ supabase_admin สร้าง (ระบบ/ส่วนขยายของ Supabase) ไม่ใช่ตารางที่ทีมสร้างผ่าน migration/SQL Editor
+--   ถ้าต้องการเปลี่ยน ต้องให้ Supabase support ดำเนินการ
+-- แนวปฏิบัติ: ทุกครั้งที่สร้างตารางใหม่ ให้ REVOKE สิทธิ์เขียนจาก anon/authenticated แบบส่วนที่ 1 เสมอ

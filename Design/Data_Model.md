@@ -88,7 +88,9 @@ PK = (menu_item_id, category_id) → ผูกเมนูกับหมวด�
 - ไม่มี policy INSERT/UPDATE/DELETE → publishable key ในหน้าเว็บแก้ข้อมูลไม่ได้ (ทดสอบแล้ว: POST ได้ 401 / 42501)
 - การเพิ่ม/แก้ข้อมูลทำผ่าน Supabase Dashboard หรือ SQL Editor (สิทธิ์เจ้าของโปรเจกต์)
 - (v1.0.2, `db/003`) สิทธิ์ระดับตาราง: ถอน INSERT/UPDATE/DELETE/TRUNCATE/TRIGGER/REFERENCES จาก anon, authenticated เหลือ **SELECT อย่างเดียว** เป็นชั้นป้องกันที่สองนอกจาก RLS
-- ถ้าสร้างตารางใหม่ใน schema public ในอนาคต ให้ REVOKE สิทธิ์เขียนแบบเดียวกัน (ค่าเริ่มต้นของ Supabase ให้สิทธิ์ครบ)
+- (v1.0.2 deploy 2) Default privileges: ตารางใหม่ที่ role `postgres` สร้างใน schema public (เช่นสร้างผ่าน migration/SQL Editor) จะ**ไม่ได้** INSERT/UPDATE/DELETE/TRUNCATE ให้ anon, authenticated อัตโนมัติอีกต่อไป (pg_default_acl: `anon=rxtm/postgres`, `authenticated=rxtm/postgres`)
+- ข้อจำกัด: default privileges ของ role `supabase_admin` เปลี่ยนไม่ได้ (permission denied, 42501) ยังเป็น `arwdDxtm` — มีผลเฉพาะตารางที่ระบบ Supabase สร้างเอง
+- แนวปฏิบัติ: สร้างตารางใหม่เมื่อไร ให้เปิด RLS และ REVOKE สิทธิ์เขียนจาก anon/authenticated ทุกครั้ง (ดู `db/003`)
 
 ## 6. วิธีแก้ไข / เพิ่มเมนู
 
