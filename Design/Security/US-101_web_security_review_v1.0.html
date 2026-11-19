@@ -730,5 +730,20 @@
   จัดทำเมื่อ 19 พ.ย. 2026 ช่วง 14:56–15:05 น. (เวลาไทย, Asia/Bangkok) โดย 204 Web Security Review Agent สำหรับการศึกษา — ปกปิดค่าคีย์ลับ โทเคน และคุกกี้
 </footer>
 </main>
+
+<section id="retest-v103" style="margin:2em 0;padding:1em;border:2px solid #0a7;background:#f6fff8">
+<h2>การยืนยันปิด Finding หลัง v1.0.3 (204 · 19 พ.ย. 2026 15:14 น. เวลาไทย)</h2>
+<p>สภาพแวดล้อม: Production <code>https://vibecode-office-food.vercel.app</code> · <code>APP_VERSION=1.0.3</code> · commit ตามที่ 202 แจ้ง <code>7787a53</code> · วิธี: GET อ่านอย่างเดียว + ทบทวน <code>js/app.js</code> ที่ deploy แล้ว · ไม่ส่ง payload</p>
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px">
+<tr><th>ID เดิม</th><th>ประเด็น</th><th>สิ่งที่ยืนยัน</th><th>ผล</th></tr>
+<tr><td>WSR-12 / WSR-32 · AUTHZ-01 (P1)</td><td>RLS อ่านเมนูซ่อน</td><td><code>menu_items?is_available=eq.false</code> → <code>[]</code> (200); <code>select=id,is_available</code> ได้เฉพาะ id 1–10 ที่ true เท่านั้น</td><td><b>ปิดแล้ว</b></td></tr>
+<tr><td>WSR-13 · AUTHZ-02 (P3)</td><td>anon อ่าน categories</td><td><code>categories</code> และ <code>menu_item_categories</code> → HTTP 401 / 42501 permission denied</td><td><b>ปิดแล้ว</b></td></tr>
+<tr><td>WSR-38 · SQLI-06 (P2)</td><td>error เผยชื่อคอลัมน์บน UI</td><td><code>js/app.js</code> v1.0.3 ใช้ข้อความกลางภาษาไทยบน DOM; รายละเอียดไป <code>console.error</code> เท่านั้น</td><td><b>ปิดแล้ว</b> (ขอบเขต UI ตามที่มอบหมาย)</td></tr>
+<tr><td>WSR-04 (Info)</td><td>Design/Teaching/</td><td>URL Teaching คืน 404; <code>.vercelignore</code> มี <code>Design/Teaching/</code></td><td><b>ปิดแล้ว</b></td></tr>
+</table>
+<p>Baseline หลังยืนยัน: แถวที่ anon อ่านได้ 10 · รวมราคา available 1,781.25 · ไม่ได้เขียนข้อมูล</p>
+<p>หมายเหตุ: คำตอบ 401 ของ PostgREST ยังมีชื่อตารางในข้อความ permission denied (ไม่ใช่ช่องโหว่การอ่านอีกต่อไป) — หากต้องการปิดการเปิดเผยนี้เพิ่ม ให้จัดการที่ edge/gateway แยกต่างหาก</p>
+</section>
+
 </body>
 </html>
