@@ -46,8 +46,8 @@
 <span class="pill na">รอ Test Account 0</span>
 </p>
 <p>ผลที่พบ: 
-<span class="pill ok">ผ่านในขอบเขตที่ตรวจ 22</span>
-<span class="pill low">พบข้อบกพร่องที่ยืนยันได้ 4 (Low 1 · Info 3)</span>
+<span class="pill ok">ผ่านในขอบเขตที่ตรวจ 23</span>
+<span class="pill low">พบข้อบกพร่องที่ยืนยันได้ 3 (Low 0 · Info 3)</span>
 <span class="pill info">ยังยืนยันไม่ได้ 1</span>
 <span class="pill na">ไม่เกี่ยวข้อง 4</span>
 · <b>ไม่พบ Critical / High / Medium</b>
@@ -69,7 +69,7 @@
 
 <tr><td>ACT-04</td><td>Identity/Auth · แอป (anon)</td><td>WSTG-ATHN · API Top10</td><td>ทบทวน: แอปไม่มีระบบล็อกอิน</td><td>แอป US-101 ไม่มีฟังก์ชันสมัคร/ล็อกอิน/รีเซ็ตรหัส/MFA — ไม่มีพื้นผิว auth ในตัวแอป</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td>index.html, app.js (ไม่มี auth)</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
 
-<tr><td>ACT-05</td><td>Identity · Supabase GoTrue (anon)</td><td>WSTG-ATHN-03 · API8:2023</td><td>เชิงรุก: เรียก <code>/auth/v1/settings</code> + ลอง signup</td><td>พบ endpoint GoTrue เปิดสาธารณะ: <code>disable_signup:false</code>, <code>email:true</code>, <code>mailer_autoconfirm:false</code> → <b>การสมัครบัญชีเองเปิดอยู่</b> แม้แอปไม่ใช้ auth; ลอง POST <code>/auth/v1/signup</code> ถูกปฏิเสธ 400 ที่ชั้นตรวจอีเมล (ไม่สร้างบัญชีจริง/ไม่ส่งอีเมลสำเร็จ)</td><td>ตรวจสำเร็จ</td><td>พบข้อบกพร่องที่ยืนยันได้</td><td><code>G3</code> settings, <code>g4_signup.json</code></td><td class="sev-low">Low</td><td>ปิด self-signup ใน Supabase Auth (Dashboard → Authentication → <code>disable_signup=true</code>) เพราะ US-101 ไม่ใช้ auth; ยืนยันหลังแก้: <code>/auth/v1/settings</code> ต้องขึ้น <code>disable_signup:true</code> และ POST signup ต้องได้ 422/403</td><td><b>@202</b> ปิด signup · <b>@201</b> จัดลำดับ</td></tr>
+<tr><td>ACT-05</td><td>Identity · Supabase GoTrue (anon)</td><td>WSTG-ATHN-03 · API8:2023</td><td>เชิงรุก: เรียก <code>/auth/v1/settings</code> + ลอง signup</td><td><b>รอบแรก:</b> พบ <code>disable_signup:false</code> (Low) · <b>Retest 19 พ.ย. 2026 ~16:13 น.:</b> เจ้าของปิด self-signup แล้ว — <code>disable_signup:true</code>; POST <code>/auth/v1/signup</code> → <b>HTTP 422</b> <code>error_code=signup_disabled</code> "Signups not allowed for this instance"</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>G3</code> (เดิม), <code>retest_act05/settings.json</code>, <code>retest_act05/signup.json</code></td><td class="sev-none">— (ปิดแล้ว)</td><td>ปิดแล้วโดยเจ้าของระบบใน Supabase Dashboard; ยืนยันผ่าน 2 ทาง (settings + active signup)</td><td><b>ปิดแล้ว</b> — รอบ security US-101 ปิดสมบูรณ์ (เหลือ ACT-03 Blocked/Info)</td></tr>
 
 <tr><td>ACT-06</td><td>Authorization · menu_items อ่านแถวซ่อน (anon)</td><td>WSTG-ATHZ-02 · API1(BOLA)</td><td>เชิงรุก: filter bypass</td><td>ยิงหลายรูปแบบเพื่ออ่าน <code>is_available=false</code>: <code>id=eq.11/12</code>, <code>is.false</code>, <code>not.eq.true</code>, <code>id=gt.10</code>, <code>or=(false,true)</code>, limit/offset — ทุกแบบคืนเฉพาะแถวที่ขายได้</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>b2_hidden.json</code> [], <code>c1_rls_bypass.txt</code></td><td class="sev-none">—</td><td>คงไว้; RLS <code>using(is_available=true)</code> ทำงานถูกต้อง (ปิด AUTHZ-01 เดิมแล้ว)</td><td>ยืนยันปิด finding AUTHZ-01</td></tr>
 
@@ -128,12 +128,15 @@
 
 <h2>3. ข้อบกพร่องเรียงตามความรุนแรง</h2>
 
-<div class="defect">
-<b>[Low] ACT-05 — Supabase เปิดให้สมัครบัญชีเอง (self-signup) ทั้งที่แอปไม่ใช้ auth</b><br>
-<b>ผลกระทบ:</b> endpoint GoTrue <code>/auth/v1/settings</code> เปิดสาธารณะและแสดง <code>disable_signup:false</code>, <code>email:true</code> — ใครก็ตามที่มี publishable key (เปิดใน JS) สามารถเรียก <code>/auth/v1/signup</code> สร้างบัญชี/กระตุ้นการส่งอีเมลยืนยัน (mailer_autoconfirm:false) ได้ เป็นพื้นผิวที่ไม่จำเป็น เสี่ยงถูกใช้สแปม/กินโควตาอีเมล แม้ไม่กระทบข้อมูล (role authenticated มีแค่ SELECT menu_items)<br>
-<b>เหตุผลระดับความรุนแรง:</b> Low — เป็น mockup เพื่อการศึกษา, ไม่มีข้อมูลหลุด, แต่เป็น misconfiguration จริงที่ควรปิด<br>
-<b>หลักฐาน:</b> <code>G3</code> (settings), <code>g4_signup.json</code> (ลองสมัครถูกปฏิเสธ 400 ที่ชั้นตรวจอีเมล — ไม่สร้างบัญชีจริง)<br>
-<b>วิธีแก้:</b> ตั้ง <code>disable_signup = true</code> ใน Supabase Auth · <b>ยืนยันหลังแก้:</b> <code>/auth/v1/settings</code> ต้องขึ้น <code>disable_signup:true</code> และ POST signup ต้องได้ 422/403
+<div class="defect" style="border-left-color:#16a34a;background:#f0fdf4">
+<b>[ปิดแล้ว] ACT-05 — Supabase self-signup (เดิม Low)</b><br>
+<b>สถานะ:</b> <span class="pill ok">Closed</span> — เจ้าของปิด "Allow new users to sign up" ใน Supabase Dashboard แล้ว<br>
+<b>ยืนยันโดย 204 (19 พ.ย. 2026 ~16:13 น. Asia/Bangkok):</b>
+<ul>
+<li><code>GET /auth/v1/settings</code> → <code>disable_signup:true</code></li>
+<li><code>POST /auth/v1/signup</code> → HTTP 422, <code>error_code=signup_disabled</code>, msg "Signups not allowed for this instance"</li>
+</ul>
+<b>หลักฐาน retest:</b> <code>retest_act05/settings.json</code>, <code>retest_act05/signup.json</code>
 </div>
 
 <div class="defect" style="border-left-color:#38bdf8">
@@ -160,10 +163,10 @@ PostgREST คืน hint เช่น <code>GRANT … ON public.menu_items</code
 
 <h2>5. รายการส่งต่อ (Hand-off)</h2>
 <ul>
-<li><b>@201 BA Agent:</b> จัดลำดับ 1 ข้อบกพร่อง Low ใหม่ (ACT-05 ปิด self-signup) + รับทราบ Info 3 ข้อ (ACT-03/29/31) ที่เป็นทางเลือก</li>
-<li><b>@202 Vibe Code Agent:</b> ปิด self-signup ใน Supabase Auth (<code>disable_signup=true</code>) — ไม่ต้องแตะโค้ดแอป เป็นการตั้งค่าโปรเจกต์</li>
-<li><b>@203 Independent Tester Agent:</b> (1) ยืนยัน HTTP→HTTPS redirect ด้วย client อื่น (ACT-03); (2) ทดสอบ render stored XSS ด้วยเมนู seed ที่มี payload บน browser จริง (ACT-23); (3) regression baseline 10/1,781.25 ยังตรงหลังทดสอบ</li>
-<li><b>ยืนยันปิด finding เดิม (รอบ passive v1.0):</b> AUTHZ-01 (ACT-06/07), AUTHZ-02 (ACT-08), SQLI-06 ฝั่ง UI (ACT-29), WSR-04 Teaching 404 (ACT-24) — ปิดแล้วบน v1.0.3</li>
+<li><b>ACT-05:</b> <span class="pill ok">Closed</span> — เจ้าของปิด self-signup แล้ว · 204 ยืนยันปิด 19 พ.ย. 2026 ~16:13 น.</li>
+<li><b>@201 BA Agent:</b> รับทราบ Info ที่ยอมรับแล้ว (ACT-29, ACT-31) และ ACT-03 ที่ยัง Blocked/Info</li>
+<li><b>ACT-03 (http→https):</b> คงสถานะ <b>Blocked (Info)</b> — เครือข่ายผู้ตรวจ/201/203 ออกผ่าน Pingora ได้ 500; ต้องยืนยันจากเครื่อง/เน็ตมือถือของเจ้าของ</li>
+<li><b>ยืนยันปิด finding เดิม + ACT-05:</b> AUTHZ-01, AUTHZ-02, SQLI-06 (UI), WSR-04 Teaching, ACT-05 self-signup — ปิดครบแล้ว · <b>รอบ security ของ US-101 ปิดสมบูรณ์</b> (เหลือเฉพาะ ACT-03 Info ที่เครือข่ายยืนยันไม่ได้)</li>
 </ul>
 
 <div class="small" style="margin-top:20px">หมายเหตุ: ปกปิด publishable key/token/PII ในรายงานตามข้อกำหนด · ไฟล์หลักฐานดิบเก็บฝั่งผู้ตรวจที่ <code>/workspace/sec204/active_v103/</code> · ทดสอบบน Production v1.0.3 เท่านั้น ส่วนใดเข้าไม่ถึงได้ระบุเป็น "ยังยืนยันไม่ได้/ไม่เกี่ยวข้อง" ไม่อ้างว่าทดสอบครบทุกส่วน</div>
@@ -179,6 +182,17 @@ PostgREST คืน hint เช่น <code>GRANT … ON public.menu_items</code
 <li><b>CSP:</b> <code>script-src 'self'</code> ไม่มี <code>unsafe-inline</code> จึงบล็อก inline/onerror แม้จะสะท้อน</li>
 </ul>
 <p><b>ผล ACT-23: ผ่าน — ไม่พบ XSS ที่รันได้</b></p>
+</section>
+
+
+<section id="retest-act05" style="margin:1.5em 0;padding:1em;border:2px solid #16a34a;background:#f0fdf4">
+<h2>Retest ACT-05 — ปิด self-signup (204 · 19 พ.ย. 2026 ~16:13 น. เวลาไทย)</h2>
+<p>ตามการแจ้งจาก 201 ว่าเจ้าของปิด "Allow new users to sign up" ใน Supabase Dashboard แล้ว 204 ตรวจสอบเอง 2 ทาง:</p>
+<ol>
+<li><code>GET /auth/v1/settings</code> (anon publishable) → <code>{"disable_signup": true, ...}</code></li>
+<li><code>POST /auth/v1/signup</code> ด้วยอีเมลทดสอบ → <b>HTTP 422</b> · <code>error_code: signup_disabled</code> · <code>msg: Signups not allowed for this instance</code></li>
+</ol>
+<p><b>ผล: ACT-05 ปิดแล้ว</b> · ไม่พบ Critical/High/Medium ค้าง · รอบ Active Security Test ของ US-101 ถือว่าปิดสมบูรณ์ (ACT-03 คงเป็น Blocked/Info ตามข้อจำกัดเครือข่าย)</p>
 </section>
 
 </body>
