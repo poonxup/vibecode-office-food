@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-101 Active Security Test v1.0 — 204 Web Security Review Agent</title>
+<style>
+ body{font-family:"Segoe UI",Tahoma,sans-serif;line-height:1.55;color:#1f2430;max-width:1400px;margin:0 auto;padding:24px;background:#f7f8fa}
+ h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:26px 0 10px;border-left:4px solid #2563eb;padding-left:10px}
+ .meta{background:#fff;border:1px solid #e3e7ee;border-radius:10px;padding:14px 18px;margin:12px 0}
+ .meta b{color:#111}
+ .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;margin:2px}
+ .ok{background:#dcfce7;color:#166534}.low{background:#fef9c3;color:#854d0e}.info{background:#e0f2fe;color:#075985}
+ .na{background:#f1f5f9;color:#475569}.fail{background:#fee2e2;color:#991b1b}
+ table{border-collapse:collapse;width:100%;background:#fff;font-size:12.5px;margin:8px 0 18px}
+ th,td{border:1px solid #d7dce5;padding:7px 8px;vertical-align:top;text-align:left}
+ th{background:#eef2f7;position:sticky;top:0}
+ code{background:#eef1f5;padding:1px 5px;border-radius:4px;font-size:12px;word-break:break-all}
+ tr:nth-child(even) td{background:#fbfcfe}
+ .sev-low{color:#854d0e;font-weight:700}.sev-info{color:#075985;font-weight:700}.sev-none{color:#166534}
+ ul{margin:6px 0 6px 20px} .small{color:#64748b;font-size:12px}
+ .defect{background:#fff;border:1px solid #e3e7ee;border-left:4px solid #eab308;border-radius:8px;padding:12px 16px;margin:10px 0}
+</style>
+</head>
+<body>
+<h1>รายงานทดสอบความปลอดภัยเชิงรุก (Active Security Test) — US-101</h1>
+<div class="small">จัดทำโดย 204. Web Security Review Agent · บทบาท: ทดสอบเชิงรุกเพื่อการศึกษาบนระบบ Mockup (ได้รับอนุญาตจากเจ้าของระบบ Dr.Rattakorn, 19 พ.ย. 2026)</div>
+
+<div class="meta">
+<h2 style="margin-top:6px">1. สรุปขอบเขตและสภาพแวดล้อม</h2>
+<ul>
+<li><b>เป้าหมาย (เว็บ):</b> <code>https://vibecode-office-food.vercel.app</code> — Production, <b>APP_VERSION 1.0.3</b> (ยืนยันจาก <code>js/config.js</code>)</li>
+<li><b>Backend:</b> Supabase <code>https://yhcjsgbffgabsmsybnle.supabase.co</code> (ref <code>yhcjsgbffgabsmsybnle</code>, ap-southeast-1) ผ่าน PostgREST + GoTrue</li>
+<li><b>บทบาทที่ใช้ทดสอบ:</b> ผู้ใช้ทั่วไปไม่ล็อกอิน (anon) ด้วย publishable key สาธารณะ (<code>sb_publishable_***masked***</code>) — ไม่มี Test Account เนื่องจากแอปไม่มีระบบล็อกอิน</li>
+<li><b>ประเภทการทดสอบ:</b> <b>เชิงรุก (ยิง payload)</b> ตามอนุญาตของเจ้าของ + ทบทวนโค้ด/หลักฐาน · <b>ข้อจำกัดที่ยึดเสมอ:</b> ไม่รัน DROP/TRUNCATE/ALTER · หากมีการเขียนต้องกู้ baseline และแจ้ง 203</li>
+<li><b>กรอบอ้างอิง:</b> OWASP WSTG v4.2, OWASP API Security Top 10 (2023), PTES, NIST SP 800-115, OSSTMM</li>
+<li><b>ช่วงเวลาตรวจ (เวลาไทย Asia/Bangkok):</b> เริ่ม <b>19 พ.ย. 2026 15:39 น.</b> — สิ้นสุด <b>19 พ.ย. 2026 15:42 น.</b></li>
+<li><b>หลักฐาน:</b> บันทึก request/response เก็บที่ <code>/workspace/sec204/active_v103/</code> (ของผู้ตรวจ)</li>
+</ul>
+
+<h2>สรุปจำนวนรายการตามสถานะ</h2>
+<p>
+<b>รวม 31 รายการ (ACT-01 ถึง ACT-31)</b> · 
+<span class="pill ok">ตรวจสำเร็จ 30</span>
+<span class="pill fail">ตรวจไม่สำเร็จ 1 (HTTP→HTTPS จากเครือข่ายนี้)</span>
+<span class="pill na">รอ Test Account 0</span>
+</p>
+<p>ผลที่พบ: 
+<span class="pill ok">ผ่านในขอบเขตที่ตรวจ 22</span>
+<span class="pill low">พบข้อบกพร่องที่ยืนยันได้ 4 (Low 1 · Info 3)</span>
+<span class="pill info">ยังยืนยันไม่ได้ 1</span>
+<span class="pill na">ไม่เกี่ยวข้อง 4</span>
+· <b>ไม่พบ Critical / High / Medium</b>
+</p>
+</div>
+
+<h2>2. ตารางผลการตรวจ (1 แถว / 1 รายการ)</h2>
+<table>
+<thead><tr>
+<th>ID</th><th>หน้า/ฟังก์ชันและบทบาท</th><th>มาตรฐาน/ข้ออ้างอิง</th><th>ประเภทและวิธีตรวจ</th><th>สิ่งที่ทำจริง</th><th>สถานะการดำเนินการ</th><th>ผลที่พบ</th><th>หลักฐาน</th><th>ความรุนแรง</th><th>วิธีแก้และวิธียืนยันหลังแก้</th><th>ประเด็นส่งต่อ</th>
+</tr></thead>
+<tbody>
+
+<tr><td>ACT-01</td><td>พื้นผิวระบบ · ทั้งไซต์ (anon)</td><td>WSTG-INFO · OSSTMM</td><td>เชิงรุก: สำรวจ endpoint, อ่านโค้ด</td><td>ยืนยันว่าเป็น SPA หน้าเดียว ไม่มีล็อกอิน; โหลดเมนูจาก REST <code>menu_items</code>; ตะกร้าเป็น state ฝั่ง client; backend คือ PostgREST + GoTrue</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>01_home_headers.txt</code>, <code>02_config.txt</code>, js/app.js, js/cart.js</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-02</td><td>Config/Deploy · โฮมเพจ (anon)</td><td>WSTG-CONF-07/12 · NIST 800-115</td><td>เชิงรุก: ตรวจ Security Headers</td><td>GET หน้าแรก ตรวจ header: พบ CSP (<code>script-src 'self'</code>), HSTS (2y+preload), X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy ครบ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>01_home_headers.txt</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-03</td><td>Config · บังคับ HTTPS (anon)</td><td>WSTG-CONF-07</td><td>เชิงรุก: เรียกผ่าน http://</td><td>ลองเรียก <code>http://…vercel.app/</code> เพื่อดูการ redirect → ได้ HTTP 500 จากเครือข่ายผู้ตรวจ ยืนยัน redirect ไม่สำเร็จ (HSTS preload บังคับ HTTPS ฝั่ง browser อยู่แล้ว)</td><td>ตรวจไม่สำเร็จ</td><td>ยังยืนยันไม่ได้</td><td><code>G1</code> (HTTP:500)</td><td class="sev-info">Info</td><td>ยืนยันด้วย browser จริง/เครื่องมืออื่นว่า http→https 308; HSTS preload มีผลอยู่แล้ว</td><td>@203 ยืนยัน redirect ด้วย client อื่น</td></tr>
+
+<tr><td>ACT-04</td><td>Identity/Auth · แอป (anon)</td><td>WSTG-ATHN · API Top10</td><td>ทบทวน: แอปไม่มีระบบล็อกอิน</td><td>แอป US-101 ไม่มีฟังก์ชันสมัคร/ล็อกอิน/รีเซ็ตรหัส/MFA — ไม่มีพื้นผิว auth ในตัวแอป</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td>index.html, app.js (ไม่มี auth)</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-05</td><td>Identity · Supabase GoTrue (anon)</td><td>WSTG-ATHN-03 · API8:2023</td><td>เชิงรุก: เรียก <code>/auth/v1/settings</code> + ลอง signup</td><td>พบ endpoint GoTrue เปิดสาธารณะ: <code>disable_signup:false</code>, <code>email:true</code>, <code>mailer_autoconfirm:false</code> → <b>การสมัครบัญชีเองเปิดอยู่</b> แม้แอปไม่ใช้ auth; ลอง POST <code>/auth/v1/signup</code> ถูกปฏิเสธ 400 ที่ชั้นตรวจอีเมล (ไม่สร้างบัญชีจริง/ไม่ส่งอีเมลสำเร็จ)</td><td>ตรวจสำเร็จ</td><td>พบข้อบกพร่องที่ยืนยันได้</td><td><code>G3</code> settings, <code>g4_signup.json</code></td><td class="sev-low">Low</td><td>ปิด self-signup ใน Supabase Auth (Dashboard → Authentication → <code>disable_signup=true</code>) เพราะ US-101 ไม่ใช้ auth; ยืนยันหลังแก้: <code>/auth/v1/settings</code> ต้องขึ้น <code>disable_signup:true</code> และ POST signup ต้องได้ 422/403</td><td><b>@202</b> ปิด signup · <b>@201</b> จัดลำดับ</td></tr>
+
+<tr><td>ACT-06</td><td>Authorization · menu_items อ่านแถวซ่อน (anon)</td><td>WSTG-ATHZ-02 · API1(BOLA)</td><td>เชิงรุก: filter bypass</td><td>ยิงหลายรูปแบบเพื่ออ่าน <code>is_available=false</code>: <code>id=eq.11/12</code>, <code>is.false</code>, <code>not.eq.true</code>, <code>id=gt.10</code>, <code>or=(false,true)</code>, limit/offset — ทุกแบบคืนเฉพาะแถวที่ขายได้</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>b2_hidden.json</code> [], <code>c1_rls_bypass.txt</code></td><td class="sev-none">—</td><td>คงไว้; RLS <code>using(is_available=true)</code> ทำงานถูกต้อง (ปิด AUTHZ-01 เดิมแล้ว)</td><td>ยืนยันปิด finding AUTHZ-01</td></tr>
+
+<tr><td>ACT-07</td><td>Authorization · นับจำนวนแถวทั้งหมด (anon)</td><td>WSTG-ATHZ-02</td><td>เชิงรุก: <code>Prefer: count=exact</code></td><td>ขอ count=exact → <code>content-range: 0-0/10</code> ยืนยัน RLS กรองการนับด้วย แถวซ่อน (11,12) ไม่ถูกนับ/อ่าน</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>c2_count.txt</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-08</td><td>Authorization · categories/menu_item_categories (anon)</td><td>WSTG-ATHZ-02 · API1</td><td>เชิงรุก: GET ตรง + embed join</td><td>GET <code>categories</code>, <code>menu_item_categories</code> → 401 (42501); อ่านผ่าน embed <code>menu_items?select=…,categories(*)</code> → 401 เช่นกัน</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>b3/b4</code>, <code>E1</code></td><td class="sev-none">—</td><td>คงไว้ (ปิด AUTHZ-02 เดิมแล้ว)</td><td>ยืนยันปิด finding AUTHZ-02</td></tr>
+
+<tr><td>ACT-09</td><td>Authorization · เขียนข้อมูล INSERT (anon)</td><td>WSTG-ATHZ · API5(BFLA)</td><td>เชิงรุก: POST สร้างเมนูปลอม</td><td>POST <code>menu_items</code> ด้วย <code>Prefer: return=representation</code> → 401 (42501) ปฏิเสธ ไม่มีแถวใหม่</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D1</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-10</td><td>Authorization · UPDATE ราคา (anon)</td><td>WSTG-ATHZ · API5</td><td>เชิงรุก: PATCH ราคา id=1</td><td>PATCH ตั้งราคา 0.01 → 401 (42501) ปฏิเสธ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D2</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-11</td><td>Authorization · เปิดเมนูซ่อน UPDATE (anon)</td><td>WSTG-ATHZ · API3(BOPLA)</td><td>เชิงรุก: PATCH <code>is_available=true</code> id=11</td><td>พยายามแก้ให้เมนูซ่อนโผล่ → 401 (42501) ปฏิเสธ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D3</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-12</td><td>Authorization · DELETE (anon)</td><td>WSTG-ATHZ · API5</td><td>เชิงรุก: DELETE id=1</td><td>DELETE เมนู → 401 (42501) ปฏิเสธ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D4</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-13</td><td>Authorization · UPSERT merge-duplicates (anon)</td><td>WSTG-ATHZ · API3</td><td>เชิงรุก: POST <code>resolution=merge-duplicates</code></td><td>ลอง upsert id=1 ชื่อ HACKED → 401 (42501) ปฏิเสธ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D5</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-14</td><td>Authorization · INSERT categories (anon)</td><td>WSTG-ATHZ · API5</td><td>เชิงรุก: POST categories</td><td>POST สร้าง category → 401 (42501) ปฏิเสธ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D6</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-15</td><td>API · HTTP verb tampering (anon)</td><td>WSTG-CONF-06 · API</td><td>เชิงรุก: PUT แทน PATCH</td><td>PUT <code>menu_items?id=eq.1</code> → 400 (PostgREST ต้องการ key ครบ) ไม่สามารถใช้ verb เลี่ยงสิทธิ์ได้ (grant เขียนถูกถอนแล้ว)</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D7</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-16</td><td>API · RPC/Function abuse (anon)</td><td>API5(BFLA)</td><td>เชิงรุก: POST <code>/rpc/version</code></td><td>เรียก RPC → 404 (PGRST202) ไม่มีฟังก์ชันเปิดให้ anon เรียก</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>D8</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-17</td><td>API · OpenAPI/schema disclosure (anon)</td><td>WSTG-CONF · API9</td><td>เชิงรุก: GET root <code>/rest/v1/</code></td><td>ขอ OpenAPI root → 401 "Secret API key required" ไม่เปิดสคีมาเต็มให้ publishable key</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>d9_openapi.json</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-18</td><td>API · enumerate ตารางอื่น (anon)</td><td>API1 · WSTG-ATHZ-04</td><td>เชิงรุก: GET users/orders/profiles ฯลฯ</td><td>ลองเดา 8 ตาราง (users, profiles, orders, order_items, carts, customers, admins, auth_users) → 404 ทั้งหมด ไม่มีตารางหลุดนอกเหนือ menu_items</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>E2</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-19</td><td>Session/CSRF · ทั้งไซต์ (anon)</td><td>WSTG-SESS · WSTG-CSRF</td><td>ทบทวน: cookie + state change</td><td>ไม่มี cookie เซสชัน (auth ใช้ header <code>apikey</code>/Bearer); ไม่มี endpoint เปลี่ยนสถานะที่ anon เรียกได้ → ไม่มีพื้นผิว CSRF</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td><code>01_home_headers.txt</code> (ไม่มี Set-Cookie)</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-20</td><td>SQLi · filter/query params (anon)</td><td>WSTG-INPV-05 · API</td><td>เชิงรุก: ยิง classic/stacked/UNION</td><td>ยิง <code>' OR '1'='1</code>, <code>1;DROP TABLE</code>, <code>UNION SELECT</code>, <code>%27 OR 1=1--</code> ที่ filter → กลายเป็น literal คืน [], หรือ 400 (invalid integer), หรือถูก Cloudflare WAF บล็อก 403 — ไม่มี payload รันเข้า DB (PostgREST parameterize ทั้งหมด)</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>E3</code> (403 WAF/400/[])</td><td class="sev-none">—</td><td>คงไว้; สอดคล้องรายงาน SQLi เดิม (v1.0.2) ไม่พบช่องโหว่</td><td>—</td></tr>
+
+<tr><td>ACT-21</td><td>SQLi · order-by injection (anon)</td><td>WSTG-INPV-05</td><td>เชิงรุก: <code>order=(select 1)</code></td><td>ฉีด subquery ใน order → 400 (PGRST100 parse error) ปฏิเสธ ไม่ประมวลผล SQL อิสระ</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>E4</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-22</td><td>XSS · เมนู/ตะกร้า (DOM) (anon)</td><td>WSTG-INPV-01/02 · WSTG-CLNT-01</td><td>ทบทวนโค้ด sink + เชิงรุก</td><td>ทุก sink <code>innerHTML</code> ใน app.js ผ่าน <code>esc()</code> (หนี &amp;&lt;&gt;&quot;&#39;) รวม name/category/image_url; ค่าใน src ก็ถูก esc จึงเบรก attribute ไม่ได้ ไม่มีช่อง reflected</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td>app.js บรรทัด 8,54-61,83-88</td><td class="sev-none">—</td><td>คงการใช้ esc() ทุกจุดที่ประกอบ HTML</td><td>—</td></tr>
+
+<tr><td>ACT-23</td><td>XSS · Stored ผ่านข้อมูลเมนู (anon)</td><td>WSTG-INPV-02</td><td>ทบทวน: เส้นทาง stored</td><td>anon เขียน DB ไม่ได้ (ACT-09..14 ล้วน 401) จึงฉีด stored payload ไม่ได้; หากเจ้าของ seed ข้อมูลที่มีสคริปต์ ก็ถูก <code>esc()</code> ตอน render — ยังไม่ได้ทดสอบ render ด้วย data ที่มี payload จริงบน browser</td><td>ตรวจสำเร็จ</td><td>ยังยืนยันไม่ได้</td><td>ACT-09..14, app.js esc()</td><td class="sev-info">Info</td><td>ให้ 203 ทดสอบ render เมนูที่มีชื่อ <code>&lt;img onerror&gt;</code> (seed ด้วยสิทธิ์เจ้าของ) บน browser จริงเพื่อยืนยันว่า esc() กันได้ 100%</td><td>@203 ทดสอบ render stored บน browser</td></tr>
+
+<tr><td>ACT-24</td><td>Input อื่น · Path Traversal (anon)</td><td>WSTG-ATHZ-01 · WSTG-INPV-11</td><td>เชิงรุก: ../ และ encoded</td><td>ลอง <code>/../etc/passwd</code>, <code>/%2e%2e/%2e%2e/etc/passwd</code> → 403; ไฟล์อ่อนไหว <code>/.git/config</code>, <code>/.env</code>, <code>/vercel.json</code>, <code>/db/…</code>, <code>/tester/</code>, <code>/Design/Teaching/</code> → 404 (ตาม .vercelignore)</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>F2</code></td><td class="sev-none">—</td><td>คงไว้; .vercelignore กันไฟล์ที่ไม่ควรเสิร์ฟแล้ว</td><td>ยืนยันปิด WSR-04 (Teaching 404)</td></tr>
+
+<tr><td>ACT-25</td><td>Input อื่น · SSRF/SSTI/Command (anon)</td><td>WSTG-INPV-11/12/18/19</td><td>ทบทวน: มีฟังก์ชันดึง URL/เทมเพลตหรือไม่</td><td>แอปเป็น static + client fetch ไปยัง Supabase เท่านั้น ไม่มี server-side fetch/template engine/exec → ไม่มีพื้นผิว SSRF/SSTI/Command Injection</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td>โค้ดทั้งหมด (static)</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-26</td><td>Input อื่น · Open Redirect (anon)</td><td>WSTG-CLNT-04</td><td>เชิงรุก: <code>//evil</code>, <code>?redirect=</code></td><td>ลอง <code>/?redirect=https://evil</code> → 200 (param ถูกเพิกเฉย, static); <code>//evil.example</code> → 308 ไปยัง host เดิม (normalize) ไม่พา redirect ออกนอกโดเมน</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>F4</code></td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-27</td><td>File Upload/Download (anon)</td><td>WSTG-BUSL-08/09</td><td>ทบทวน: มีฟังก์ชันไฟล์หรือไม่</td><td>แอปไม่มีอัปโหลด; ดาวน์โหลดมีเฉพาะเอกสาร public ภายใต้ <code>Design/Security/</code> (รายงาน) — ไฟล์ส่วนตัวถูกกันด้วย .vercelignore (ACT-24)</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td>index.html, .vercelignore</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-28</td><td>Business Logic · ตะกร้า/ราคา (anon)</td><td>WSTG-BUSL-01/07</td><td>ทบทวน + เชิงรุก client-side</td><td>ตะกร้าและราคารวมคำนวณฝั่ง client (cart.js) <b>ไม่มีการส่งออเดอร์ไปเซิร์ฟเวอร์</b> ใน US-101; การแก้ราคาใน DOM/ตัวแปร มีผลแค่หน้าจอผู้ใช้เอง ไม่กระทบข้อมูลฝั่งเซิร์ฟเวอร์ (ไม่มี transaction/ชำระเงิน)</td><td>ตรวจสำเร็จ</td><td>ไม่เกี่ยวข้อง</td><td>cart.js, app.js (ไม่มี POST order)</td><td class="sev-none">—</td><td>เมื่อมี Story สั่งซื้อจริง ต้องตรวจราคา/ยอดฝั่งเซิร์ฟเวอร์</td><td>บันทึกไว้สำหรับ Story ถัดไป</td></tr>
+
+<tr><td>ACT-29</td><td>Error/Sensitive · ข้อความ error (anon)</td><td>WSTG-ERRH-01/02 · API9</td><td>เชิงรุก: provoke error ที่ UI และ API</td><td>หน้าเว็บแสดงข้อความกลางภาษาไทยเท่านั้น (SQLI-06 แก้แล้ว ยืนยันในโค้ด app.js); แต่ที่ชั้น REST API ตรงๆ ยังคืน error ละเอียด (เช่น <code>hint: GRANT … ON public.menu_items</code>, <code>column pgrst_body.id does not exist</code>) เปิดชื่อ table/column — เป็นพฤติกรรมมาตรฐานของ PostgREST (สคีมารู้ได้จาก JS สาธารณะอยู่แล้ว และเขียนไม่ได้)</td><td>ตรวจสำเร็จ</td><td>พบข้อบกพร่องที่ยืนยันได้</td><td><code>D1/D2/D7</code>, <code>b3_categories.txt</code></td><td class="sev-info">Info</td><td>ยอมรับได้ในเชิงความเสี่ยง (read-only, สคีมาเปิดโดยออกแบบ); หากต้องการลด ให้ลองตั้ง <code>db-anon-role</code>/custom error หรือ reverse-proxy กรอง hint; UI ปิดแล้วถือว่าเพียงพอสำหรับ US-101</td><td>@201 รับทราบ (ทางเลือก ไม่บังคับ)</td></tr>
+
+<tr><td>ACT-30</td><td>Client · Clickjacking/CSP/Storage (anon)</td><td>WSTG-CLNT-09/10/12</td><td>เชิงรุก+ทบทวน header/โค้ด</td><td>X-Frame-Options DENY + CSP <code>frame-ancestors 'none'</code> (กัน clickjacking); CSP <code>script-src 'self'</code> ไม่มี unsafe-inline; ไม่มีการใช้ localStorage/sessionStorage เก็บข้อมูลอ่อนไหว; publishable key เปิดโดยการออกแบบ (read-only)</td><td>ตรวจสำเร็จ</td><td>ผ่านในขอบเขตที่ตรวจ</td><td><code>01_home_headers.txt</code>, <code>F1</code> (ไม่มี storage sink)</td><td class="sev-none">—</td><td>—</td><td>—</td></tr>
+
+<tr><td>ACT-31</td><td>Client/API · CORS (anon)</td><td>WSTG-CLNT-07 · API</td><td>เชิงรุก: Origin ปลอม</td><td>ไซต์ static ตอบ <code>access-control-allow-origin: *</code> (ค่า default ของ Vercel สำหรับไฟล์ static สาธารณะ); Supabase REST สะท้อน Origin ที่ส่งมา (<code>…evil.example</code>) — ทั้งคู่กระทบเฉพาะข้อมูล public read-only ไม่มี cookie/credential จึงความเสี่ยงต่ำ</td><td>ตรวจสำเร็จ</td><td>พบข้อบกพร่องที่ยืนยันได้</td><td><code>F3</code>, <code>G2</code></td><td class="sev-info">Info</td><td>ข้อมูลเป็น public read-only จึงยอมรับได้; หากในอนาคตมีข้อมูลที่ต้องหวง ให้จำกัด CORS ที่ Supabase และหลีกเลี่ยง ACAO:* สำหรับ response ที่มีข้อมูลอ่อนไหว</td><td>@201 รับทราบ (ทางเลือก)</td></tr>
+
+</tbody>
+</table>
+
+<h2>3. ข้อบกพร่องเรียงตามความรุนแรง</h2>
+
+<div class="defect">
+<b>[Low] ACT-05 — Supabase เปิดให้สมัครบัญชีเอง (self-signup) ทั้งที่แอปไม่ใช้ auth</b><br>
+<b>ผลกระทบ:</b> endpoint GoTrue <code>/auth/v1/settings</code> เปิดสาธารณะและแสดง <code>disable_signup:false</code>, <code>email:true</code> — ใครก็ตามที่มี publishable key (เปิดใน JS) สามารถเรียก <code>/auth/v1/signup</code> สร้างบัญชี/กระตุ้นการส่งอีเมลยืนยัน (mailer_autoconfirm:false) ได้ เป็นพื้นผิวที่ไม่จำเป็น เสี่ยงถูกใช้สแปม/กินโควตาอีเมล แม้ไม่กระทบข้อมูล (role authenticated มีแค่ SELECT menu_items)<br>
+<b>เหตุผลระดับความรุนแรง:</b> Low — เป็น mockup เพื่อการศึกษา, ไม่มีข้อมูลหลุด, แต่เป็น misconfiguration จริงที่ควรปิด<br>
+<b>หลักฐาน:</b> <code>G3</code> (settings), <code>g4_signup.json</code> (ลองสมัครถูกปฏิเสธ 400 ที่ชั้นตรวจอีเมล — ไม่สร้างบัญชีจริง)<br>
+<b>วิธีแก้:</b> ตั้ง <code>disable_signup = true</code> ใน Supabase Auth · <b>ยืนยันหลังแก้:</b> <code>/auth/v1/settings</code> ต้องขึ้น <code>disable_signup:true</code> และ POST signup ต้องได้ 422/403
+</div>
+
+<div class="defect" style="border-left-color:#38bdf8">
+<b>[Info] ACT-29 — REST API คืน error ละเอียด (เปิดชื่อ table/column)</b><br>
+PostgREST คืน hint เช่น <code>GRANT … ON public.menu_items</code> ที่ชั้น API โดยตรง (UI ปิดข้อความดิบแล้วตาม SQLI-06) — ความเสี่ยงต่ำเพราะสคีมารู้ได้จาก JS สาธารณะอยู่แล้ว และ anon เขียนไม่ได้
+</div>
+
+<div class="defect" style="border-left-color:#38bdf8">
+<b>[Info] ACT-31 — CORS กว้าง (static ACAO:* / Supabase สะท้อน Origin)</b><br>
+กระทบเฉพาะข้อมูล public read-only ไม่มี cookie/credential; ยอมรับได้ในบริบทนี้ ควรทบทวนเมื่อมีข้อมูลอ่อนไหวในอนาคต
+</div>
+
+<div class="defect" style="border-left-color:#38bdf8">
+<b>[Info] ACT-03 — ยืนยัน HTTP→HTTPS redirect ไม่ได้จากเครือข่ายผู้ตรวจ</b><br>
+เรียก http:// ได้ 500 (ข้อจำกัดเครือข่าย); HSTS preload บังคับ HTTPS ฝั่ง browser อยู่แล้ว — ให้ 203 ยืนยันด้วย client อื่น
+</div>
+
+<h2>4. สถานะ Baseline (ก่อน/หลังทดสอบ)</h2>
+<ul>
+<li><b>ก่อนทดสอบ:</b> menu_items อ่านได้ 10 แถว · รวมราคา 1,781.25 บาท · แถวซ่อน (is_available=false) อ่านไม่ได้</li>
+<li><b>หลังทดสอบ:</b> <span class="pill ok">ไม่เปลี่ยนแปลง (unchanged)</span> — การเขียนทุกวิธี (INSERT/UPDATE/DELETE/UPSERT/PUT) ถูกปฏิเสธ 401 ทั้งหมด <b>จึงไม่มีการเขียนสำเร็จและไม่ต้องกู้คืน</b></li>
+<li>ไม่มีการรัน DROP/TRUNCATE/ALTER ตลอดการทดสอบ (ตามข้อจำกัดของเจ้าของ)</li>
+</ul>
+
+<h2>5. รายการส่งต่อ (Hand-off)</h2>
+<ul>
+<li><b>@201 BA Agent:</b> จัดลำดับ 1 ข้อบกพร่อง Low ใหม่ (ACT-05 ปิด self-signup) + รับทราบ Info 3 ข้อ (ACT-03/29/31) ที่เป็นทางเลือก</li>
+<li><b>@202 Vibe Code Agent:</b> ปิด self-signup ใน Supabase Auth (<code>disable_signup=true</code>) — ไม่ต้องแตะโค้ดแอป เป็นการตั้งค่าโปรเจกต์</li>
+<li><b>@203 Independent Tester Agent:</b> (1) ยืนยัน HTTP→HTTPS redirect ด้วย client อื่น (ACT-03); (2) ทดสอบ render stored XSS ด้วยเมนู seed ที่มี payload บน browser จริง (ACT-23); (3) regression baseline 10/1,781.25 ยังตรงหลังทดสอบ</li>
+<li><b>ยืนยันปิด finding เดิม (รอบ passive v1.0):</b> AUTHZ-01 (ACT-06/07), AUTHZ-02 (ACT-08), SQLI-06 ฝั่ง UI (ACT-29), WSR-04 Teaching 404 (ACT-24) — ปิดแล้วบน v1.0.3</li>
+</ul>
+
+<div class="small" style="margin-top:20px">หมายเหตุ: ปกปิด publishable key/token/PII ในรายงานตามข้อกำหนด · ไฟล์หลักฐานดิบเก็บฝั่งผู้ตรวจที่ <code>/workspace/sec204/active_v103/</code> · ทดสอบบน Production v1.0.3 เท่านั้น ส่วนใดเข้าไม่ถึงได้ระบุเป็น "ยังยืนยันไม่ได้/ไม่เกี่ยวข้อง" ไม่อ้างว่าทดสอบครบทุกส่วน</div>
+
+
+<section id="browser-xss-confirm" style="margin:1.5em 0;padding:1em;border:2px solid #0a7;background:#f6fff8">
+<h2>ยืนยัน XSS/DOM บนเบราว์เซอร์จริง (204 computerUse · 19 พ.ย. 2026 15:39–15:45 น. เวลาไทย)</h2>
+<p>เสริมผล ACT-23 ที่ worker ส่งต่อมา — ตรวจบน Production v1.0.3 ด้วยเบราว์เซอร์จริง:</p>
+<ul>
+<li><b>Reflected/DOM:</b> ยิง <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> และ <code>&lt;img src=x onerror=alert(1)&gt;</code> ผ่าน <code>?q/?name/?search/?msg/?error</code> และ hash → ไม่ถูกสะท้อนเข้า HTML/title/body ไม่มี dialog</li>
+<li><b>Stored (localStorage):</b> แอปไม่อ่าน localStorage; เขียน key <code>cart</code> ที่มี payload ผ่าน DevTools แล้ว reload → สรุปยังว่าง ไม่ render ไม่รัน</li>
+<li><b>Output encoding:</b> ชื่อเมนูจาก API ถูก escape (<code>ไก่ทอดหาดใหญ่ ... &amp; ...</code> แสดงเป็น <code>&amp;</code> ใน DOM)</li>
+<li><b>CSP:</b> <code>script-src 'self'</code> ไม่มี <code>unsafe-inline</code> จึงบล็อก inline/onerror แม้จะสะท้อน</li>
+</ul>
+<p><b>ผล ACT-23: ผ่าน — ไม่พบ XSS ที่รันได้</b></p>
+</section>
+
+</body>
+</html>
