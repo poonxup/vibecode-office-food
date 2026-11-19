@@ -87,6 +87,8 @@ PK = (menu_item_id, category_id) → ผูกเมนูกับหมวด�
 - Policy: `SELECT` อย่างเดียว สำหรับ role `anon`, `authenticated` (หน้าเว็บอ่านได้อย่างเดียว)
 - ไม่มี policy INSERT/UPDATE/DELETE → publishable key ในหน้าเว็บแก้ข้อมูลไม่ได้ (ทดสอบแล้ว: POST ได้ 401 / 42501)
 - การเพิ่ม/แก้ข้อมูลทำผ่าน Supabase Dashboard หรือ SQL Editor (สิทธิ์เจ้าของโปรเจกต์)
+- (v1.0.2, `db/003`) สิทธิ์ระดับตาราง: ถอน INSERT/UPDATE/DELETE/TRUNCATE/TRIGGER/REFERENCES จาก anon, authenticated เหลือ **SELECT อย่างเดียว** เป็นชั้นป้องกันที่สองนอกจาก RLS
+- ถ้าสร้างตารางใหม่ใน schema public ในอนาคต ให้ REVOKE สิทธิ์เขียนแบบเดียวกัน (ค่าเริ่มต้นของ Supabase ให้สิทธิ์ครบ)
 
 ## 6. วิธีแก้ไข / เพิ่มเมนู
 

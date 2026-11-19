@@ -1,5 +1,5 @@
 # US-101 เลือกเมนูอาหารและดูสรุปรายการสั่ง (Office Food Ordering)
-Version: req v1.1 (2026-11-18, clarifications BA-C1, BA-C2) | Owner: 201 BA | Status: In Development
+Version: req v1.1 (2026-11-18, clarifications BA-C1, BA-C2) | Owner: 201 BA | Status: Closed (2026-11-18, web v1.0.1)
 
 ## User Story
 ในฐานะ พนักงานในออฟฟิศ ฉันต้องการ ดูเมนูอาหารพร้อมราคา เลือกอาหารที่ต้องการ และเห็นสรุปรายการที่สั่ง เพื่อ ตรวจสอบได้ว่าสั่งอะไร จำนวนเท่าไร และราคารวมเท่าไร

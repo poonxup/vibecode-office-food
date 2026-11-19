@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.2 — 2026-11-19 — US-101 security fixes (ตามรายงาน 204 Security Findings v1.0) — ไม่มีการเปลี่ยน feature/AC
+- S-12: db/003_us101_revoke_write_grants.sql — REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER, REFERENCES จาก anon/authenticated ทั้ง 3 ตาราง เหลือ SELECT อย่างเดียว (apply แล้ว, ไม่แก้ข้อมูล)
+- S-04/S-16: ย้าย onerror แบบ inline ของรูปเมนูไปผูกด้วย addEventListener ใน js/app.js (พฤติกรรมเดิม: รูปโหลดไม่ได้ -> เอารูปออก); ปุ่ม "ลองใหม่" ใช้ addEventListener
+- S-04/S-05/S-06: vercel.json เพิ่ม headers ทุก route: Content-Security-Policy (frame-ancestors 'none'), X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy camera=(), microphone=(), geolocation=(); คง HSTS
+- S-14: .vercelignore ไม่ deploy Design/Test Case/scripts/ (ยังอยู่ใน git) และ tester/; Design/Security/ เผยแพร่บน Production
+
 ## v1.0.1 — 2026-11-18 — US-101 fix round 1 (req v1.1)
 - BUG-001 (AC7/TC-16, Low): ปุ่มลอย 🛒 บนจอมือถือ (≤820px) บังจำนวนรวม/ราคารวมในสรุป → ซ่อนปุ่มอัตโนมัติเมื่อส่วนสรุป (#summary) อยู่บนจอ (IntersectionObserver) แสดงกลับเมื่อเลื่อนออก; ตรวจที่ 360/390/1280px ไม่มีตำแหน่งเลื่อนใดที่ปุ่มบังยอดรวม
 - js/app.js: log เมื่อโหลดเมนูไม่สำเร็จเปลี่ยนจาก console.warn เป็น console.error

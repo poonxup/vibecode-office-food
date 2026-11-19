@@ -1,0 +1,7 @@
+# ไม่ deploy ขึ้น Production (ยังเก็บใน git) — S-14 (204 Security Findings v1.0)
+Design/Test Case/scripts/
+tester/
+node_modules/
+.git/
+.gitignore
+.vercelignore

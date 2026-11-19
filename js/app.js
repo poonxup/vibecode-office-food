@@ -31,14 +31,14 @@ function showMenuState(state, msg) {
   if (state === "loading") box.innerHTML = `<div class="spinner"></div><p>กำลังโหลดเมนู...</p>`;
   if (state === "empty") box.innerHTML = `<p class="state-title">ยังไม่มีเมนูให้เลือกในขณะนี้</p><p>กรุณาลองใหม่ภายหลัง</p>`;
   if (state === "error") box.innerHTML = `<p class="state-title">⚠️ ${esc(msg)}</p><button class="btn-retry" id="retry">ลองใหม่</button>`;
-  if (state === "error") $("retry").onclick = loadMenu;
+  if (state === "error") $("retry").addEventListener("click", loadMenu);
 }
 
 function renderMenu() {
   $("menu-state").hidden = true;
   $("menu-grid").innerHTML = menu.map((m) => `
     <button class="menu-card" data-id="${esc(m.id)}" aria-label="เลือก ${esc(m.name)} ราคา ${esc(formatBaht(m.price))}">
-      ${m.image_url ? `<img src="${esc(m.image_url)}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="img-ph">🍱</div>`}
+      ${m.image_url ? `<img src="${esc(m.image_url)}" alt="" loading="lazy">` : `<div class="img-ph">🍱</div>`}
       <span class="menu-cat">${esc(m.category || "")}</span>
       <span class="menu-name">${esc(m.name)}</span>
       <span class="menu-price">${esc(formatBaht(m.price))}</span>
@@ -72,6 +72,13 @@ function renderSummary() {
       <span class="line-total">${esc(formatBaht(lineTotal(l)))}</span>
     </li>`).join("");
 }
+
+// S-04/S-16 (v1.0.2): ย้าย onerror แบบ inline ออกจาก HTML มาผูกด้วย addEventListener (รองรับ CSP ที่ไม่อนุญาต inline script)
+// รูปเมนูโหลดไม่ได้ -> เอา <img> ออก (พฤติกรรมเดิม) ใช้ capture เพราะ event 'error' ของรูปไม่ bubble
+$("menu-grid").addEventListener("error", (e) => {
+  const el = e.target;
+  if (el instanceof HTMLImageElement && el.closest(".menu-card")) el.remove();
+}, true);
 
 // BUG-001: ซ่อนปุ่มลอย 🛒 เมื่อส่วนสรุปรายการ (#summary) อยู่บนจอ เพื่อไม่ให้บังจำนวนรวม/ราคารวม
 function setupCartPill() {
