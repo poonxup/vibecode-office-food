@@ -53,6 +53,7 @@ Deploy อัตโนมัติจาก GitHub: push เข้า branch `ma
 - ฐานข้อมูล: หน้าเว็บอ่านได้อย่างเดียว ทั้งระดับ RLS และระดับ GRANT
 - (v1.0.3) anon อ่านได้เฉพาะเมนูที่ is_available = true (บังคับที่ RLS) และอ่าน categories / menu_item_categories ไม่ได้
 - (v1.0.3) ห้ามแสดงข้อความ error ดิบจากเซิร์ฟเวอร์บนหน้าจอ ให้ใช้ข้อความไทยทั่วไป และ log รายละเอียดที่ console.error
+- ความเสี่ยงที่ยอมรับและรายการที่รอแก้ด้วยการตั้งค่า: ดู `Design/Security/US-101_accepted_risks.md`
 
 ## ฐานข้อมูล
 
