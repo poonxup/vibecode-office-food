@@ -1,0 +1,196 @@
+{
+ "web": "1.0.3",
+ "commit": "7787a53",
+ "data": "v1.0",
+ "results": [
+  {
+   "tc": "TC-01",
+   "status": "Pass",
+   "expected": "10 รายการ ตามลำดับ sort_order ชื่อ/ราคาตรง CSV",
+   "actual": "10 รายการ: 1:55.00 บาท, 2:65.00 บาท, 3:70.00 บาท, 4:50.00 บาท, 5:45.50 บาท, 6:89.75 บาท, 7:120.00 บาท, 8:1.00 บาท, 9:35.00 บาท, 10:1,250.00 บาท",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-02",
+   "status": "Pass",
+   "expected": "id 11,12 ไม่แสดง",
+   "actual": "ids แสดง: 1,2,3,4,5,6,7,8,9,10",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-03",
+   "status": "Pass",
+   "expected": "รายการไม่มีรูป/ไม่มี category แสดงได้ ไม่มีรูปแตก",
+   "actual": "id4 placeholder=true, id9 cat=\"\" price=35.00 บาท, รูปแตก=0",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-04",
+   "status": "Pass",
+   "expected": "1.00 / 1,250.00 / 45.50 / 89.75",
+   "actual": "1.00 บาท / 1,250.00 บาท / 45.50 บาท / 89.75 บาท",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-05",
+   "status": "Pass",
+   "expected": "ชื่อยาว/อักขระพิเศษแสดงครบ ไม่ล้น",
+   "actual": "[{\"sw\":136,\"cw\":136,\"cardOver\":false},{\"sw\":136,\"cw\":136,\"cardOver\":false}] name6=\"ไก่ทอดหาดใหญ่ (3 ชิ้น) & ข้าวเหนียว\"",
+   "ev": "TC-01_desktop_menu.png"
+  },
+  {
+   "tc": "TC-06",
+   "status": "Pass",
+   "expected": "ยังไม่มีรายการ, 0 ชิ้น, 0.00 บาท",
+   "actual": "ยังไม่มีรายการ, 0 ชิ้น, 0.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-07",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 1 = 55.00 บาท; รวม 1 ชิ้น 55.00 บาท",
+   "actual": "id1: 55.00 บาท x 1 = 55.00 บาท; รวม 1 ชิ้น 55.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-08",
+   "status": "Pass",
+   "expected": "id2: 65.00 บาท x 3 = 195.00 บาท; รวม 3 ชิ้น 195.00 บาท",
+   "actual": "id2: 65.00 บาท x 3 = 195.00 บาท; รวม 3 ชิ้น 195.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-09",
+   "status": "Pass",
+   "expected": "id8: 1.00 บาท x 10 = 10.00 บาท; รวม 10 ชิ้น 10.00 บาท",
+   "actual": "id8: 1.00 บาท x 10 = 10.00 บาท; รวม 10 ชิ้น 10.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-10",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 2 = 110.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id5: 45.50 บาท x 3 = 136.50 บาท; รวม 6 ชิ้น 316.50 บาท",
+   "actual": "id1: 55.00 บาท x 2 = 110.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id5: 45.50 บาท x 3 = 136.50 บาท; รวม 6 ชิ้น 316.50 บาท",
+   "ev": "TC-10_desktop.png"
+  },
+  {
+   "tc": "TC-11",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 3 = 165.00 บาท; id2: 65.00 บาท x 2 = 130.00 บาท; รวม 5 ชิ้น 295.00 บาท",
+   "actual": "id1: 55.00 บาท x 3 = 165.00 บาท; id2: 65.00 บาท x 2 = 130.00 บาท; รวม 5 ชิ้น 295.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-12",
+   "status": "Pass",
+   "expected": "id1: 55.00 บาท x 1 = 55.00 บาท; id2: 65.00 บาท x 1 = 65.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id4: 50.00 บาท x 1 = 50.00 บาท; id5: 45.50 บาท x 1 = 45.50 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; id7: 120.00 บาท x 1 = 120.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; id9: 35.00 บาท x 1 = 35.00 บาท; id10: 1,250.00 บาท x 1 = 1,250.00 บาท; รวม 10 ชิ้น 1,781.25 บาท",
+   "actual": "id1: 55.00 บาท x 1 = 55.00 บาท; id2: 65.00 บาท x 1 = 65.00 บาท; id3: 70.00 บาท x 1 = 70.00 บาท; id4: 50.00 บาท x 1 = 50.00 บาท; id5: 45.50 บาท x 1 = 45.50 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; id7: 120.00 บาท x 1 = 120.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; id9: 35.00 บาท x 1 = 35.00 บาท; id10: 1,250.00 บาท x 1 = 1,250.00 บาท; รวม 10 ชิ้น 1,781.25 บาท",
+   "ev": "TC-12_all.png"
+  },
+  {
+   "tc": "TC-13",
+   "status": "Pass",
+   "expected": "id5: 45.50 บาท x 2 = 91.00 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; รวม 3 ชิ้น 180.75 บาท",
+   "actual": "id5: 45.50 บาท x 2 = 91.00 บาท; id6: 89.75 บาท x 1 = 89.75 บาท; รวม 3 ชิ้น 180.75 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-14",
+   "status": "Pass",
+   "expected": "id10: 1,250.00 บาท x 2 = 2,500.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; รวม 3 ชิ้น 2,501.00 บาท",
+   "actual": "id10: 1,250.00 บาท x 2 = 2,500.00 บาท; id8: 1.00 บาท x 1 = 1.00 บาท; รวม 3 ชิ้น 2,501.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-15",
+   "status": "Pass",
+   "expected": "รีเฟรชแล้วว่าง 0.00 บาท",
+   "actual": "lines=0, 0 ชิ้น, 0.00 บาท",
+   "ev": ""
+  },
+  {
+   "tc": "TC-17",
+   "status": "Pass",
+   "expected": "1280px ทำ TC-10 ได้ ไม่ล้นแนวนอน",
+   "actual": "lines=3, 316.50 บาท, overflowX=false",
+   "ev": "TC-10_desktop.png"
+  },
+  {
+   "tc": "TC-16",
+   "status": "Pass",
+   "expected": "360px ทำ TC-07, TC-10 ได้ ไม่ล้นแนวนอน",
+   "actual": "TC-07 lines=1 55.00 บาท; TC-10 lines=3 316.50 บาท; overflowX=false; BUG-001: ตรวจ 52 ตำแหน่งเลื่อน พบปุ่มทับ=0; ตอนเห็นยอดรวม ปุ่ม={\"display\":\"block\",\"visibility\":\"hidden\",\"opacity\":\"0\",\"hidden\":false,\"inert\":false,\"tabindex\":\"-1\",\"ariaHidden\":\"true\"}; ปุ่มแสดงตอนอยู่บนสุด=true",
+   "ev": "TC-16_mobile360_full.png, TC-16_mobile360_total.png, TC-16_mobile360_top_pill.png"
+  },
+  {
+   "tc": "TC-18",
+   "status": "Pass",
+   "expected": "ไม่มี console error",
+   "actual": "errors=0 ; warnings=0 ",
+   "ev": ""
+  },
+  {
+   "tc": "TC-18b",
+   "status": "Pass",
+   "expected": "(ตรวจ OBS-01) เมื่อโหลดเมนูล้มเหลว ต้องมี console.error และข้อความแจ้งผู้ใช้",
+   "actual": "console.error=[\"Failed to load resource: net::ERR_FAILED\",\"โหลดเมนูไม่สำเร็จ: Failed to fetch \"]; ข้อความ=\"⚠️ ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้งลองใหม่\"",
+   "ev": "OBS-01_load_error.png"
+  },
+  {
+   "tc": "TC-03b",
+   "status": "Pass",
+   "expected": "(201 ขอ) รูปโหลดไม่ได้ ต้องมี fallback ไม่มีรูปแตก และไม่มี CSP error",
+   "actual": "id1 {\"img\":false,\"broken\":false,\"ph\":false,\"name\":\"ข้าวกะเพราหมูสับไข่ดาว\"}; CSP errors=[]; console errors อื่น=[\"Failed to load resource: the server responded with a status of 404 (Not Found)\"]",
+   "ev": "TC-03b_image_fallback.png"
+  },
+  {
+   "tc": "RT-SQLI06",
+   "status": "Pass",
+   "expected": "(ตรวจซ้ำ SQLI-06) เมื่อ API คืน error ที่มีชื่อคอลัมน์ หน้าจอต้องแสดงข้อความทั่วไป ไม่มีชื่อคอลัมน์/รหัส error ดิบ",
+   "actual": "ข้อความบนจอ=\"⚠️ ไม่สามารถโหลดเมนูได้ในขณะนี้ กรุณาลองใหม่อีกครั้งลองใหม่\"; คำต้องห้ามที่พบ=[]; console.error=[\"Failed to load resource: the server responded with a status of 400 (Bad Request)\",\"โหลดเมนูไม่สำเร็จ: HTTP 400 {\\\"code\\\":\\\"42703\\\",\\\"details\\\":null,\\\"hint\\\":null,\\\"message\\\":\\\"column menu_items.nosuchcol does not exist\\\"}\"]",
+   "ev": "RT-SQLI06_generic_error.png"
+  },
+  {
+   "tc": "TC-16b",
+   "status": "Pass",
+   "expected": "360px เลื่อนลง/ขึ้น 10 รอบ ปกติ+เร็ว ปุ่ม 🛒 ไม่ทับยอดรวม",
+   "actual": "10/10 รอบ down=false up=true fast=true, errs=[]",
+   "ev": "TC-16b_after10rounds_top.png"
+  },
+  {
+   "tc": "TC-19",
+   "status": "Pass",
+   "expected": "insert price 0 และ -5 ต้องถูกปฏิเสธ",
+   "actual": "ทั้งสองถูกปฏิเสธด้วย 23514 menu_items_price_check (id 9901/9902 ไม่ถูกบันทึก)",
+   "ev": "Supabase SQL"
+  },
+  {
+   "tc": "TC-20",
+   "status": "Pass",
+   "expected": "ปิด id1 แล้วหายจากหน้าเว็บ เปิดกลับแล้วกลับมา",
+   "actual": "before 1–10 | off 2–10 (REST anon id=1 คืน []) | after 1–10; baseline คืนครบ 12/10/1,781.25",
+   "ev": "TC-20_before.png, TC-20_off.png, TC-20_after.png"
+  },
+  {
+   "tc": "RT-AUTHZ01",
+   "status": "Pass",
+   "expected": "anon อ่านเมนู is_available=false ไม่ได้",
+   "actual": "policy menu_items_read qual=(is_available = true) roles {anon,authenticated}; GET is_available=eq.false → []; id=in.(11,12) → []; GET ทั้งหมดได้ 10 แถว",
+   "ev": "curl + pg_policies"
+  },
+  {
+   "tc": "RT-AUTHZ02",
+   "status": "Pass",
+   "expected": "anon อ่าน categories / menu_item_categories ไม่ได้",
+   "actual": "ทั้งสองตารางคืน HTTP 401 code 42501 permission denied",
+   "ev": "curl"
+  },
+  {
+   "tc": "RT-WSR04",
+   "status": "Pass",
+   "expected": "Design/Teaching/ ไม่ถูกเสิร์ฟ public",
+   "actual": "GET /Design/Teaching/ → 404",
+   "ev": "curl"
+  }
+ ]
+}
