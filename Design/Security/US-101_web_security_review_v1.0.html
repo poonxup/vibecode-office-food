@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-101 Web Security Review v1.0</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#4b5563; --line:#d7dde5; --bg:#f6f7f9; --card:#fff; --accent:#0f4c81; --low:#9a3412; --info:#1e40af; --ok:#166534; --warn:#92400e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Sarabun","Prompt","Noto Sans Thai",system-ui,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:var(--accent); color:#fff; padding:28px 24px 22px; }
+  header h1 { margin:0 0 6px; font-size:1.6rem; font-weight:700; }
+  header p { margin:0; opacity:.92; }
+  main { max-width:100%; padding:20px 16px 48px; }
+  h2 { margin:28px 0 10px; font-size:1.2rem; color:var(--accent); }
+  h3 { margin:18px 0 8px; font-size:1.05rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:0 0 16px; }
+  ul { margin:8px 0; padding-left:1.3em; }
+  li { margin:3px 0; }
+  .counts { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+  .pill { display:inline-block; background:#eef3f8; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:.92rem; }
+  table { border-collapse:collapse; width:100%; min-width:1400px; background:#fff; font-size:.86rem; }
+  th, td { border:1px solid var(--line); vertical-align:top; padding:8px 9px; text-align:left; }
+  th { background:#e8eef5; position:sticky; top:0; z-index:1; }
+  td.id { font-weight:700; white-space:nowrap; }
+  .wrap { overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
+  .sev-low { color:var(--low); font-weight:700; }
+  .sev-info { color:var(--info); font-weight:700; }
+  .sev-none { color:var(--muted); }
+  .f-def { background:#fff7ed; }
+  .f-unk { background:#fffbeb; }
+  .f-na { color:var(--muted); }
+  .st-fail { color:var(--warn); font-weight:600; }
+  .st-ok { color:var(--ok); }
+  footer { color:var(--muted); font-size:.85rem; margin-top:24px; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>US-101 Web Security Review v1.0</h1>
+  <p>204 Web Security Review Agent — ทบทวนเชิงสังเกตและหลักฐานที่ได้รับอนุญาต (ไม่ยิง payload)</p>
+</header>
+<main>
+<section class="card">
+  <h2>สรุปขอบเขต</h2>
+  <ul>
+    <li><strong>URL:</strong> <a href="https://vibecode-office-food.vercel.app/">https://vibecode-office-food.vercel.app</a> (Production, แอปเวอร์ชัน 1.0.2, US-101)</li>
+    <li><strong>สภาพแวดล้อมเพิ่มเติมในขอบเขต:</strong> Supabase project ref yhcjsgbffgabsmsybnle (ap-southeast-1), schema public — ตรวจด้วยการอ่านค่าตั้งค่า/นโยบายและ GET ตามที่หน้าเว็บใช้เท่านั้น</li>
+    <li><strong>ขอบเขตฟังก์ชัน:</strong> หน้าเมนูอาหารสาธารณะ สรุปรายการในเบราว์เซอร์ และ API อ่านเมนู ไม่รวมล็อกอิน ชำระเงิน ส่งคำสั่งซื้อ หรือหน้าผู้ดูแล</li>
+    <li><strong>สิทธิ์:</strong> เจ้าของระบบ (Dr.Rattakorn) อนุญาตให้สังเกตและทบทวนหลักฐานของระบบการเรียนการสอนนี้แล้ว</li>
+    <li><strong>วิธีในรอบนี้:</strong> เปิดเว็บและอ่าน header ด้วย GET/HEAD, ทบทวนโค้ดและไฟล์ตั้งค่า, สอบถามแคตตาล็อกฐานข้อมูลและ Security Advisor แบบอ่านอย่างเดียว, อ้างรายงานเดิมที่ได้รับอนุญาต <strong>ห้ามและไม่ได้</strong> ส่ง payload, สแกนเชิงรุก, ทดลองข้ามสิทธิ์, หรือเรียก API แบบเขียน (POST/PATCH/DELETE)</li>
+    <li><strong>ช่วงเวลาตรวจ:</strong> 19 พ.ย. 2026 14:56 น. ถึง 19 พ.ย. 2026 15:05 น. (เวลาไทย, Asia/Bangkok, UTC+7)</li>
+    <li><strong>บทบาทที่ใช้:</strong> ผู้ใช้ทั่วไปที่ไม่ล็อกอิน (anonymous public) — ระบบในขอบเขต US-101 ไม่มีล็อกอิน จึงไม่ขอ Test Account</li>
+    <li><strong>กรอบอ้างอิง:</strong> OWASP WSTG v4.2 (จัดหมวดรายการ), OWASP API Security Top 10 (2023) สำหรับ API, PTES และ NIST SP 800-115 สำหรับการวางขอบเขตและรายงาน, OSSTMM สำหรับการบันทึกพื้นผิว การควบคุมที่สังเกตได้ และข้อจำกัดของหลักฐาน รหัสที่ตามด้วย “(หมวด)” หมายถึงยืนยันได้เพียงระดับหมวด</li>
+    <li><strong>รายงานเดิมที่อ้าง (วันที่และสภาพแวดล้อมตามหลักฐาน):</strong> US-101_security_findings_v1.0.html (19 พ.ย. 2026, Production v1.0.1), US-101_security_findings_v1.1.html (ตรวจซ้ำ 19 พ.ย. 2026, Production v1.0.2) และ US-101_sqli_test_v1.0.html (ทดสอบเชิงรุกที่ได้รับอนุญาต 19 พ.ย. 2026, Production v1.0.2) — อ้างเป็นหลักฐานเดิม ไม่ได้ยิง payload ซ้ำ</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>จำนวนรายการตามสถานะและผลที่พบ</h2>
+  <p>ทั้งหมด <strong>45</strong> รายการ ครบทั้ง 13 หมวด</p>
+  <div class="counts">
+    <span class="pill">ตรวจสำเร็จ: 44</span>
+    <span class="pill">ตรวจไม่สำเร็จ: 1</span>
+    <span class="pill">รอ Test Account: 0</span>
+    <span class="pill">ไม่ได้ดำเนินการ: 0</span>
+  </div>
+  <div class="counts">
+    <span class="pill">ผ่านในขอบเขตที่ตรวจ: 29</span>
+    <span class="pill">พบข้อบกพร่องที่ยืนยันได้: 5</span>
+    <span class="pill">ยังยืนยันไม่ได้: 3</span>
+    <span class="pill">ไม่เกี่ยวข้อง: 8</span>
+  </div>
+  <p>ข้อบกพร่องที่ยืนยันได้มี 5 รายการในตาราง: ระดับ Low 4 รายการ และ Info 1 รายการ (WSR-12 กับ WSR-32 เป็นเรื่องเดียวกัน มุมสิทธิ์แถวและมุม BOLA ของ API) รวมเป็น 4 ประเด็น — ไม่พบ Critical/High/Medium ในรอบนี้</p>
+</section>
+
+<section class="card">
+  <h2>ข้อบกพร่องที่ยืนยันได้ (เรียงตามความรุนแรง)</h2>
+  <ol>
+    <li><strong>WSR-12</strong> (Low) — การบังคับใช้ is_available ฝั่งเซิร์ฟเวอร์ ของตาราง menu_items (บทบาท: anon)<br>พบข้อบกพร่องที่ยืนยันได้: นโยบาย RLS ใช้ using (true) จึงอนุญาตให้บทบาท anon อ่านได้ทุกแถว รวมแถวที่ is_available=false หน้าเว็บกรองเฉพาะฝั่งคำขอของไคลเอนต์ ผู้ที่เรียก REST โดยตรงด้วย publishable key จึงมองเห็นเมนูที่ UI ซ่อนได้ ฐานข้อมูลวันนี้มี 12 แถว มีขาย 10 ซ่อน 2 ผลกระทบจำกัดเพราะเป็นข้อมูลเมนูม็อกสาธารณะ ไม่ใช่ข้อมูลส่วนบุคคล แต่ไม่สอดคล้องกับเจตนาของ User Story ที่ต้องการไม่แสดงเมนูที่งดขาย และไม่มีชั้นบังคับใช้ฝั่งเซิร์ฟเวอร์</li>
+    <li><strong>WSR-13</strong> (Low) — การอ่านตาราง categories และ menu_item_categories (บทบาท: anon)<br>พบข้อบกพร่องที่ยืนยันได้: anon มี GRANT SELECT และนโยบาย SELECT using (true) ทั้งตาราง categories และ menu_item_categories ทั้งที่หน้าเว็บ US-101 ไม่ได้ใช้ ข้อมูลไม่ใช่ความลับทางธุรกิจในชุดม็อก แต่เป็นพื้นผิว API ที่เปิดเกินความจำเป็น (least privilege)</li>
+    <li><strong>WSR-32</strong> (Low) — สิทธิ์ระดับรายการข้อมูล (BOLA) ของ API เมนู (บทบาท: anon)<br>พบข้อบกพร่องที่ยืนยันได้: ไม่มีทรัพยากรที่เป็นของแต่ละผู้ใช้ แต่ระดับแถวของเมนูไม่บังคับใช้เงื่อนไข is_available ฝั่งเซิร์ฟเวอร์ (รายละเอียดและการแก้ไขอยู่ที่ WSR-12) จึงถือว่ามีช่องว่าง BOLA/การกรองแถวในความหมายของข้อมูลที่ UI ตั้งใจซ่อน</li>
+    <li><strong>WSR-38</strong> (Low) — ข้อความผิดพลาดของ PostgREST เมื่อตัวกรองหรือคำขอไม่ถูกต้อง (หลักฐานจากรายงานเดิม)<br>พบข้อบกพร่องที่ยืนยันได้: ตามรายงานเดิม คำตอบผิดพลาดของ PostgREST เผยชื่อคอลัมน์หรือชนิดข้อมูลได้ ซึ่งช่วยให้ผู้สังเกตแมปสคีมาได้แม้เรียกคำสั่งไม่สำเร็จ ผลกระทบจำกัดเพราะสคีมาเมนูสาธารณะมีเอกสารอยู่แล้วและคำสั่งไม่ถูกรัน ข้อนี้ไม่ได้ทำซ้ำในรอบเชิงสังเกต</li>
+    <li><strong>WSR-04</strong> (Info) — โฟลเดอร์ Design/Teaching/ ในคลัง (ยังไม่เสิร์ฟบน Production)<br>พบข้อบกพร่องที่ยืนยันได้: เอกสารบทเรียนเองระบุว่าห้ามนำโค้ดตัวอย่างฝั่งช่องโหว่ไป Deploy บน Production แต่โฟลเดอร์ Design/Teaching/ ไม่ได้อยู่ใน .vercelignore และขณะนี้ยังเป็นไฟล์ที่ยังไม่เข้า git (untracked) บน Production ตอนนี้ตอบ 404 จึงยังไม่ถูกเผยแพร่ หากมีผู้ commit แล้ว deploy โดยไม่ยกเว้น ไฟล์ตัวอย่างช่องโหว่จะไปอยู่บนโดเมนเดียวกับแอปจริง</li>
+  </ol>
+</section>
+
+<section class="card">
+  <h2>ข้อจำกัดและรายการที่ยังไม่ปิด</h2>
+  <ul>
+    <li>การเปลี่ยนเส้นทาง HTTP ไป HTTPS (WSR-06) ตรวจไม่สำเร็จจากเครือข่ายนี้ ได้ 500 จากพร็อกซี Pingora จึงยังยืนยันไม่ได้ (สอดคล้อง S-02/R-08)</li>
+    <li>ข้อจำกัดอัตราเรียกใช้ API (WSR-36) และการเข้ารหัสขณะจัดเก็บ/เนื้อหา log (WSR-40) ยังยืนยันไม่ได้ เพราะหลักฐานค่าตั้งค่าไม่พอ และรอบนี้ไม่ทดสอบภาระ</li>
+    <li>ไม่มีรายการที่รอ Test Account</li>
+    <li>รายงาน US-101_sqli_test_v1.0.html ยังไม่ขึ้นโดเมน Production หลัก (404) แต่มีไฟล์ในคลังให้ทบทวนได้</li>
+    <li>ค่า publishable key, รหัสผ่าน, โทเคน และค่าคุกกี้ถูกปกปิดหรือละไว้บางส่วนในรายงานนี้</li>
+  </ul>
+</section>
+
+<h2>ตารางผลการตรวจ</h2>
+<div class="wrap">
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>หน้า/ฟังก์ชันและบทบาท</th>
+      <th>มาตรฐาน/ข้ออ้างอิง</th>
+      <th>ประเภทและวิธีตรวจ</th>
+      <th>สิ่งที่ทำจริง</th>
+      <th>สถานะการดำเนินการ</th>
+      <th>ผลที่พบ</th>
+      <th>หลักฐาน</th>
+      <th>ความรุนแรง</th>
+      <th>วิธีแก้และวิธียืนยันหลังแก้</th>
+      <th>ประเด็นส่งต่อ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><th colspan="11">01. พื้นผิวระบบ</th></tr>
+    <tr>
+      <td class="id">WSR-01</td>
+      <td>หน้าเว็บสาธารณะ / (บทบาท: ผู้ใช้ทั่วไปที่ไม่ล็อกอิน)</td>
+      <td>OSSTMM (พื้นผิวระบบ); WSTG-INFO-02; PTES Intelligence Gathering; NIST SP 800-115 §4</td>
+      <td>ทำรายการหน้า ฟอร์ม และฟังก์ชันจากการใช้งานปกติและโค้ด</td>
+      <td>เปิด https://vibecode-office-food.vercel.app/ ด้วย HTTPS (GET) อ่าน index.html บน Production และโค้ดในคลัง (index.html, js/app.js, js/cart.js, js/config.js, Design/US-101_user_story.md) บันทึกเวลาเริ่ม 19 พ.ย. 2026 14:56 น. (เวลาไทย, Asia/Bangkok)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: มีหน้าเดียว แสดงเมนูอาหารและสรุปรายการที่สั่ง ไม่มีหน้าหลังล็อกอิน ไม่มีฟอร์มกรอกข้อความ/ค้นหา/สมัคร ไม่มีฟังก์ชันอัปโหลดไฟล์ การกระทำของผู้ใช้คือกดเลือกเมนูซึ่งเก็บในหน่วยความจำของเบราว์เซอร์เท่านั้น เวอร์ชันที่เสิร์ฟคือ Office Food Ordering v1.0.2 (US-101) ตาม js/config.js บน Production</td>
+      <td>index.html (1,865 ไบต์ ตรงกับคลัง), ไม่มี &amp;lt;form&amp;gt; หรือ input, สคริปต์เดียว js/app.js แบบ module, User Story US-101 ระบุนอกขอบเขต: ล็อกอิน ยืนยันคำสั่งซื้อ ชำระเงิน บันทึกคำสั่งซื้อ</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-02</td>
+      <td>บัญชีรายการ API และโดเมนที่หน้าเว็บเรียก (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>OSSTMM (พื้นผิว); WSTG-INFO-03; OWASP API Security Top 10 (2023) API9</td>
+      <td>ทำรายการ API และโฮสต์ภายนอกจากโค้ดและการเรียกตามที่แอปใช้</td>
+      <td>อ่าน js/app.js และ index.html แล้วเรียก GET เส้นเดียวกับที่แอปใช้: /rest/v1/menu_items?select=id,name,price,category,image_url,is_available,sort_order&amp;is_available=eq.true&amp;order=sort_order.asc,id.asc ไปที่โฮสต์ Supabase (อ่านอย่างเดียว) ไม่ได้เรียกตารางอื่นและไม่ได้ส่ง payload</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: API ที่แอปใช้มีเพียง GET ตาราง menu_items ผ่าน PostgREST โดเมนในขอบเขตคือ vibecode-office-food.vercel.app และ yhcjsgbffgabsmsybnle.supabase.co โฮสต์ภายนอกที่หน้าเว็บอ้างถึงคือ fonts.googleapis.com, fonts.gstatic.com (ฟอนต์) และรูปตัวอย่างจากโฮสต์ https ตาม image_url (เช่น placehold.co ใน Mock Data) ไม่พบการเปลี่ยนเส้นทางออกนอกขอบเขตตอนเปิดหน้าแรก</td>
+      <td>GET เมนูตามที่แอปใช้ ได้ HTTP 200, 10 แถว, is_available ทุกแถวเป็น true, รวมราคา 1,781.25 (สอดคล้องกับฐานข้อมูลที่นับแบบอ่านอย่างเดียว: ทั้งหมด 12 แถว, มีขาย 10, ซ่อน 2) โค้ดเรียกด้วย header apikey และ Authorization แบบ Bearer ของ publishable key</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-03</td>
+      <td>เส้นทางและไฟล์ที่เปิดสาธารณะบน Production (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-INFO-05; WSTG-CONF-05; OSSTMM</td>
+      <td>ตรวจการเปิดเผยเส้นทางด้วย HEAD/GET ตามรายการจากคลังและไฟล์ตั้งค่า ไม่สแกนทั้งโดเมนแบบอัตโนมัติ</td>
+      <td>ส่ง HEAD/GET ไปยังเส้นทางที่ทราบจากคลังและไฟล์ตั้งค่า (.vercelignore, vercel.json, โครงสร้าง Design/) ได้แก่ ไฟล์แอป, เอกสาร, db/, tester/, .git, .env, robots.txt ฯลฯ</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ไฟล์แอป (/ , /js/*.js, /styles.css) เปิดตามปกติ เอกสารที่ทีมตั้งใจเผยแพร่เปิดได้ (CHANGELOG.md, Design/Data_Model.md, Design/US-101_user_story.md, รายงานความปลอดภัย v1.0 และ v1.1, ไฟล์ Test Case, Design/data/menu_items.csv และ .json) ส่วนที่ถูกกันด้วย .vercelignore ตอบ 404 (db/*.sql, tester/, Design/Test Case/scripts/, .git, .env, vercel.json, .gitignore) ไม่มี directory listing ที่ /Design/ /js/ /db/ รายงาน SQLi เชิงรุกและโฟลเดอร์ Teaching ยังไม่ขึ้นโดเมนหลัก (404) เพราะรอบ Git deploy ก่อนหน้าติดข้อจำกัด และ Teaching ยังเป็นไฟล์ที่ยังไม่เข้า git ข้อสังเกต: ไฟล์ Mock Data สาธารณะมีรายการ is_available=false ซึ่งเป็นข้อมูลม็อกเพื่อการสอน/ทดสอบ ตามที่ changelog ระบุว่าเผยแพร่โฟลเดอร์ Design/</td>
+      <td>HEAD 19 พ.ย. 2026: /CHANGELOG.md 200; /Design/data/menu_items.csv 200 (1,528 ไบต์, มี id 11 และ 12 เป็น false); /db/001_us101_menu_schema.sql 404; /Design/Test%20Case/scripts/run.mjs 404; /.git/HEAD 404; /.env 404; /Design/Security/US-101_sqli_test_v1.0.html 404 บนโดเมนหลัก; /Design/Teaching/* 404</td>
+      <td class="sev-none">ไม่มี (ข้อสังเกต)</td>
+      <td>หากไม่ต้องการให้เมนูที่ซ่อนปรากฏในไฟล์ม็อกบนโดเมนแอป ให้ย้าย Design/data/ ออกจากชุด deploy (เช่น ใส่ใน .vercelignore) แล้วตรวจซ้ำว่าเส้นทางนั้นเป็น 404 ส่วนรายงาน SQLi ให้ 202 ใส่ในรอบ Redeploy เอกสารครั้งถัดไป</td>
+      <td>202: พิจารณาว่าไฟล์ม็อกและเอกสารทดสอบบนโดเมน Production ยังเหมาะกับวัตถุประสงค์การสอนหรือไม่ และนำรายงาน SQLi ขึ้นโดเมนหลักเมื่อ deploy เอกสารครั้งถัดไป</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-04</td>
+      <td>โฟลเดอร์ Design/Teaching/ ในคลัง (ยังไม่เสิร์ฟบน Production)</td>
+      <td>WSTG-INFO-05; WSTG-CONF-05; NIST SP 800-115 §4</td>
+      <td>ทบทวนไฟล์คลังและ .vercelignore เทียบกับสิ่งที่เสิร์ฟจริง</td>
+      <td>อ่าน Design/Teaching/SQLi_teaching_material.md, รายชื่อ secure_example.js และ vulnerable_example.js, ไฟล์ .vercelignore และตรวจ HEAD บน Production</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-def">พบข้อบกพร่องที่ยืนยันได้: เอกสารบทเรียนเองระบุว่าห้ามนำโค้ดตัวอย่างฝั่งช่องโหว่ไป Deploy บน Production แต่โฟลเดอร์ Design/Teaching/ ไม่ได้อยู่ใน .vercelignore และขณะนี้ยังเป็นไฟล์ที่ยังไม่เข้า git (untracked) บน Production ตอนนี้ตอบ 404 จึงยังไม่ถูกเผยแพร่ หากมีผู้ commit แล้ว deploy โดยไม่ยกเว้น ไฟล์ตัวอย่างช่องโหว่จะไปอยู่บนโดเมนเดียวกับแอปจริง</td>
+      <td>คลัง: Design/Teaching/ มี SQLi_teaching_material.md, vulnerable_example.js, secure_example.js สถานะ git ของเครื่องตรวจเป็น ?? Design/Teaching/ ; .vercelignore ยกเว้นเฉพาะ Design/Test Case/scripts/, tester/, db/, .git ไม่รวม Teaching; HEAD /Design/Teaching/vulnerable_example.js บน Production = 404</td>
+      <td class="sev-info">Info</td>
+      <td>เพิ่ม Design/Teaching/ ใน .vercelignore (หรือเก็บสื่อการสอนนอกคลังที่ deploy) ให้สอดคล้องกับคำเตือนในเอกสารบทเรียน จากนั้น commit ได้ตามปกติ วิธียืนยัน: หลัง deploy, HEAD ไปที่ /Design/Teaching/vulnerable_example.js และเอกสารบทเรียนต้องได้ 404</td>
+      <td>ส่งต่อ 202 ให้ปรับ .vercelignore ก่อนนำโฟลเดอร์ Teaching เข้า git/deploy</td>
+    </tr>
+    <tr><th colspan="11">02. Configuration และ Deployment</th></tr>
+    <tr>
+      <td class="id">WSR-05</td>
+      <td>HTTPS และใบรับรองของ / (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CRYP-01; NIST SP 800-115 §4</td>
+      <td>เปิดหน้าเว็บด้วย HTTPS และอ่านใบรับรอง</td>
+      <td>เปิด https://vibecode-office-food.vercel.app/ ได้ HTTP 200 และอ่านใบรับรองด้วย openssl s_client</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ใช้ HTTPS ได้ปกติ ใบรับรอง CN=*.vercel.app ออกโดย Google Trust Services (WR1) มีผล 31 ต.ค. 2026 ถึง 29 ม.ค. 2027 (เวลาในใบรับรองเป็น GMT) SAN เป็น DNS:*.vercel.app สอดคล้องผลตรวจเดิม S-01 ในรายงาน v1.0 (19 พ.ย. 2026, Production)</td>
+      <td>openssl x509 subject/issuer/dates/SAN; การตอบ HTTP/2 200 จากเซิร์ฟเวอร์ Vercel</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-06</td>
+      <td>การเปลี่ยนเส้นทาง http:// ไป https:// (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CONF-07 (หมวด); NIST SP 800-115 §4</td>
+      <td>ขอหน้าแรกผ่าน HTTP แล้วอ่านสถานะและ Location</td>
+      <td>ส่งคำขอ http://vibecode-office-food.vercel.app/ จากเครือข่ายเครื่องตรวจ 2 ครั้งในรอบนี้</td>
+      <td class="st-fail">ตรวจไม่สำเร็จ</td>
+      <td class="f-unk">ยังยืนยันไม่ได้: ได้ HTTP 500 จาก Server: Pingora ที่ที่อยู่ 198.18.0.1 ซึ่งน่าจะเป็นพร็อกซีขาออกของสภาพแวดล้อมตรวจ ไม่ใช่ขอบของ Vercel โดยตรง จึงยืนยันการเปลี่ยนเส้นทาง 301/308 ของโดเมนจริงจากเครือข่ายนี้ไม่ได้ ข้อนี้อยู่ในรายงานเดิม S-02 / R-08 (19 พ.ย. 2026, Production) ด้วยผลเดียวกัน อย่างไรก็ตามมี HSTS (ดู WSR-07) และชื่อ *.vercel.app อยู่ในรายการ HSTS preload ของเบราว์เซอร์ จึงบังคับ HTTPS ได้หลังเข้าครั้งแรกหรือจาก preload</td>
+      <td>คำตอบ HTTP/1.1 500 Internal Server Error, Server: Pingora, Content-Length: 0; การเชื่อมต่อไปที่ 198.18.0.1:80; อ้างรายงาน US-101_security_findings_v1.0 และ v1.1 รายการ S-02 / R-08 วันที่ 19 พ.ย. 2026 สภาพแวดล้อม Production</td>
+      <td class="sev-none">ไม่มี (ข้อจำกัดของหลักฐาน)</td>
+      <td>ตรวจซ้ำจากเครือข่ายอื่นที่ออกอินเทอร์เน็ตตรง ว่า http:// ได้ 301/308 ไป https:// แล้วค่อยปิดข้อนี้</td>
+      <td>ส่งต่อเป็นข้อจำกัดของหลักฐาน ไม่ใช่ข้อบกพร่องที่ยืนยันได้ หาก 201/202 ตรวจจากเครือข่ายอื่นได้ผล redirect ให้แจ้งกลับมาอัปเดต</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-07</td>
+      <td>HSTS ของหน้าเว็บและไฟล์ static (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CONF-07; WSTG-CRYP-03 (หมวด)</td>
+      <td>อ่าน response header จากหน้าเว็บตามปกติ</td>
+      <td>อ่าน header ของ /, /index.html, /js/app.js, /js/config.js, /styles.css และเอกสารใน /Design/</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ทุกเส้นทางที่ตรวจมี Strict-Transport-Security: max-age=63072000; includeSubDomains; preload ตามที่กำหนดใน vercel.json สอดคล้องผลเดิม S-03 (ปิด/ผ่านตั้งแต่ v1.0) และยังคงอยู่บน v1.0.2</td>
+      <td>header บน Production วันที่ 19 พ.ย. 2026; vercel.json ชุด header ของ /(.*)</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-08</td>
+      <td>Security Headers ของแอปและ /Design/ (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CONF-12; WSTG-CLNT-09; WSTG-CONF (หมวด HTTP headers)</td>
+      <td>อ่าน response header เปรียบเทียบกับ vercel.json และผลตรวจซ้ำเดิม</td>
+      <td>อ่าน CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy จาก / และไฟล์แอป รวมทั้งตัวอย่างหน้าใน /Design/ (CSP แยกชุด) อ้างรายงาน v1.1 ที่ปิด S-04, S-05, S-06</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ข้อบกพร่อง S-04/S-05/S-06 ในรายงาน v1.0 (19 พ.ย. 2026, web v1.0.1) ถูกปิดแล้วในผลตรวจซ้ำ v1.1 (web v1.0.2, 19 พ.ย. 2026 12:43–12:50 น. เวลาไทย) และยังยืนยันได้บน Production ในรอบนี้ หน้าแอปมี CSP default-src &#x27;self&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27; https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src &#x27;self&#x27; https: data:; connect-src ไปเฉพาะโฮสต์ Supabase ของโปรเจกต์; frame-ancestors &#x27;none&#x27;; X-Frame-Options: DENY; X-Content-Type-Options: nosniff; Referrer-Policy: strict-origin-when-cross-origin; Permissions-Policy: camera=(), microphone=(), geolocation=() หน้า /Design/* ใช้ CSP ที่ script-src &#x27;none&#x27; และ style-src อนุญาต &#x27;unsafe-inline&#x27; เพื่อให้รายงาน HTML แสดงสไตล์ได้ ซึ่งเหมาะสมกับหน้าที่ไม่มีสคริปต์</td>
+      <td>header บน Production; vercel.json; รายงาน US-101_security_findings_v1.1.html รายการ R-01 ถึง R-03 (ปิดแล้ว) วันที่ 19 พ.ย. 2026 สภาพแวดล้อม Production v1.0.2</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในขอบเขตปัจจุบัน หากเพิ่มโฮสต์ภายนอกต้องปรับ CSP ตามคำแนะนำใน README</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-09</td>
+      <td>Default privileges ของตารางใหม่ใน schema public (บทบาท: การตั้งค่าฐานข้อมูล)</td>
+      <td>WSTG-ATHZ-01 (หมวด); WSTG-CONF (หมวด); NIST SP 800-115 §4</td>
+      <td>ทบทวนค่าตั้งค่าจาก SQL อ่านอย่างเดียวและรายงานเดิม</td>
+      <td>อ่าน db/003_us101_revoke_write_grants.sql และสอบถาม pg_default_acl แบบอ่านอย่างเดียว เปรียบเทียบกับข้อจำกัด R-06 ในรายงาน v1.1</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ค่าของ role postgres ใน schema public สำหรับตารางใหม่เป็น anon=rxtm/postgres และ authenticated=rxtm/postgres (ไม่มี INSERT/UPDATE/DELETE/TRUNCATE อัตโนมัติ) ตามที่แก้ใน v1.0.2 ข้อจำกัดที่ยังเหลือคือ default privileges ของ role supabase_admin ใน public ยังให้ anon/authenticated เป็น arwdDxtm ซึ่งมีผลเฉพาะตารางที่ supabase_admin สร้าง (ระบบ/ส่วนขยาย) ไม่ใช่ตารางที่ทีมสร้างผ่าน migration/SQL Editor สอดคล้อง R-06 ในรายงาน v1.1 (19 พ.ย. 2026) ทีมแก้ค่านี้เองไม่ได้</td>
+      <td>pg_default_acl วันนี้; db/003 ส่วนที่ 2; รายงาน v1.1 รายการ R-06</td>
+      <td class="sev-none">ไม่มี (ข้อจำกัดค้างที่ยอมรับได้)</td>
+      <td>ไม่ต้องแก้เพิ่มในส่วนที่ทีมควบคุมได้ เมื่อสร้างตารางใหม่ให้เปิด RLS และ REVOKE สิทธิ์เขียนจาก anon/authenticated ทุกครั้งตามแนวปฏิบัติใน db/003 หากต้องการเปลี่ยนค่าของ supabase_admin ต้องติดต่อฝ่ายสนับสนุนของ Supabase</td>
+      <td>บันทึกเป็นข้อจำกัดค้าง ไม่ต้องส่งแก้ให้ 202 ในรอบนี้</td>
+    </tr>
+    <tr><th colspan="11">03. Identity, Authentication และ Account Recovery</th></tr>
+    <tr>
+      <td class="id">WSR-10</td>
+      <td>สมัครบัญชี, ล็อกอิน, MFA, รีเซ็ตรหัสผ่าน, เปลี่ยนอีเมล, ยกเลิกบัญชี</td>
+      <td>WSTG-IDNT; WSTG-ATHN; PTES; NIST SP 800-115 §4</td>
+      <td>ทบทวนฟังก์ชันที่มีจริงจากหน้าเว็บ โค้ด และ User Story</td>
+      <td>สำรวจหน้า Production และอ่าน index.html, js/app.js, js/cart.js, Design/US-101_user_story.md ไม่พบหน้าหรือลิงก์ลงชื่อเข้าใช้</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ระบบในขอบเขต US-101 ไม่มีฟังก์ชันสมัครบัญชี ล็อกอิน MFA กู้คืนรหัสผ่าน เปลี่ยนอีเมล หรือยกเลิกบัญชี (User Story ระบุนอกขอบเขตชัดเจน) จึงไม่ขอ Test Account และไม่มีรายการที่สถานะรอบัญชีทดสอบ</td>
+      <td>US-101_user_story.md ส่วนขอบเขต; หน้าเว็บไม่มีฟอร์มล็อกอิน; โค้ดไคลเอนต์ไม่เรียก /auth/v1</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในขอบเขต US-101 เมื่อมีสตอรีล็อกอินในอนาคตให้เปิดตรวจหมวดนี้ใหม่และขอ Test Account ชั่วคราวตามบทบาท</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">04. Authorization, IDOR และการแยกข้อมูล</th></tr>
+    <tr>
+      <td class="id">WSR-11</td>
+      <td>RLS และสิทธิ์ระดับตารางของ menu_items, categories, menu_item_categories (บทบาท: anon / ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-ATHZ-01; OWASP API1 Broken Object Level Authorization (บริบทการเขียน); NIST SP 800-115 §4</td>
+      <td>ทบทวนโค้ด SQL, สอบถามแคตตาล็อกแบบอ่านอย่างเดียว, อ่าน Security Advisor และผลตรวจเดิม</td>
+      <td>อ่าน db/001 และ db/003 สอบถาม pg_policies, role_table_grants, ธง RLS, คุณสมบัติฟังก์ชัน set_updated_at และเรียก Supabase Security Advisor (security) แบบอ่านอย่างเดียว อ้างรายงาน v1.1 ที่ปิด S-12</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: เปิด RLS ทั้ง 3 ตาราง มีเพียงนโยบาย SELECT สำหรับ anon และ authenticated ไม่มีนโยบาย INSERT/UPDATE/DELETE สิทธิ์ระดับตารางวันนี้เหลือ SELECT อย่างเดียว (S-12 ในรายงาน v1.0 ปิดแล้วใน v1.1 / web v1.0.2 และยังเป็นเช่นนั้น) Security Advisor ไม่มีรายการแจ้งเตือน (0 รายการ) ฟังก์ชัน set_updated_at ไม่ใช่ SECURITY DEFINER และตั้ง search_path เป็นค่าว่าง สิทธิ์เขียนของ anon ถูกถอนแล้วเป็นชั้นป้องกันที่สองนอกจาก RLS</td>
+      <td>pg_policies: cmd=SELECT เท่านั้น; role_table_grants: anon/authenticated = SELECT ทั้ง 3 ตาราง; relrowsecurity=true; set_updated_at security_definer=false, search_path=&quot;&quot;; get_advisors(type=security) ว่าง; รายงาน v1.1 รายการที่ปิด S-12 วันที่ 19 พ.ย. 2026 Production v1.0.2</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในส่วนสิทธิ์เขียน คงแนวปฏิบัติ REVOKE เมื่อสร้างตารางใหม่</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-12</td>
+      <td>การบังคับใช้ is_available ฝั่งเซิร์ฟเวอร์ ของตาราง menu_items (บทบาท: anon)</td>
+      <td>WSTG-ATHZ-01; WSTG-ATHZ-02; OWASP API1 Broken Object Level Authorization; OSSTMM (การควบคุมที่สังเกตได้)</td>
+      <td>ทบทวนนโยบาย RLS, โค้ดไคลเอนต์, User Story และผลรายงานเดิม ไม่ทดลองข้ามสิทธิ์ด้วยการเรียกแถวที่ซ่อนผ่าน REST ในรอบนี้</td>
+      <td>อ่านนโยบาย menu_items_read จากคลังและจาก pg_policies วันนี้ (qual=true) อ่าน js/app.js ที่กรอง is_available=eq.true เฉพาะตอนเรียกของหน้าเว็บ อ่าน User Story ที่กำหนดว่าเมนู is_available=false ต้องไม่แสดง และอ้างรายงาน US-101_sqli_test_v1.0 รายการ AUTHZ-01 (19 พ.ย. 2026, Production v1.0.2) รวมถึงรายงาน v1.0 รายการ S-13 ที่บันทึกข้อสังเกตไว้แล้ว นับจำนวนแถวแบบรวมจาก SQL อ่านอย่างเดียว (ไม่ดึงเนื้อหาแถวที่ซ่อน)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-def">พบข้อบกพร่องที่ยืนยันได้: นโยบาย RLS ใช้ using (true) จึงอนุญาตให้บทบาท anon อ่านได้ทุกแถว รวมแถวที่ is_available=false หน้าเว็บกรองเฉพาะฝั่งคำขอของไคลเอนต์ ผู้ที่เรียก REST โดยตรงด้วย publishable key จึงมองเห็นเมนูที่ UI ซ่อนได้ ฐานข้อมูลวันนี้มี 12 แถว มีขาย 10 ซ่อน 2 ผลกระทบจำกัดเพราะเป็นข้อมูลเมนูม็อกสาธารณะ ไม่ใช่ข้อมูลส่วนบุคคล แต่ไม่สอดคล้องกับเจตนาของ User Story ที่ต้องการไม่แสดงเมนูที่งดขาย และไม่มีชั้นบังคับใช้ฝั่งเซิร์ฟเวอร์</td>
+      <td>pg_policies วันนี้: policy menu_items_read, roles {{anon,authenticated}}, cmd=SELECT, qual=true; js/app.js บรรทัดเรียก is_available=eq.true; US-101_user_story.md (เมนูที่ is_available=false ต้องไม่แสดง); รายงาน US-101_sqli_test_v1.0.html รายการ AUTHZ-01 วันที่ 19 พ.ย. 2026 สภาพแวดล้อม Production v1.0.2 (ผลจากรายงานเดิม ไม่ได้ยิงคำขอซ้ำเพื่ออ่านแถวที่ซ่อนในรอบนี้); SELECT นับแถววันนี้ hidden_count=2</td>
+      <td class="sev-low">Low</td>
+      <td>ปรับนโยบายเป็น using (is_available = true) สำหรับ anon (และ authenticated ถ้ายังไม่ต้องการให้เห็นของซ่อน) หรือแยกนโยบายตามบทบาทผู้ดูแล วิธียืนยัน: หน้าเว็บยังโหลดเมนูที่มีขายครบ 10 รายการ; คำขอ GET แบบผู้ใช้ทั่วไปโดยไม่ใส่ตัวกรองต้องไม่คืนแถว is_available=false; Security Advisor ยังไม่มีรายการใหม่ที่ผิด</td>
+      <td>ส่งต่อ 202 ให้แก้ RLS แล้วให้ 203 ตรวจซ้ำพฤติกรรมหน้าเว็บและสัญญา API แบบอ่านตามที่ได้รับอนุญาต</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-13</td>
+      <td>การอ่านตาราง categories และ menu_item_categories (บทบาท: anon)</td>
+      <td>WSTG-ATHZ-01; OWASP API1 / API5; OSSTMM</td>
+      <td>ทบทวนนโยบาย RLS และสิทธิ์จากแคตตาล็อก รวมผลรายงานเดิม ไม่ดึงข้อมูลทั้งตารางผ่าน REST ในรอบนี้</td>
+      <td>สอบถาม pg_policies และ role_table_grants วันนี้ อ่าน db/001 ที่ระบุว่า US-101 ยังไม่ใช้ตารางเหล่านี้ และอ้างรายงาน US-101_sqli_test_v1.0 รายการ AUTHZ-02 (19 พ.ย. 2026, Production v1.0.2)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-def">พบข้อบกพร่องที่ยืนยันได้: anon มี GRANT SELECT และนโยบาย SELECT using (true) ทั้งตาราง categories และ menu_item_categories ทั้งที่หน้าเว็บ US-101 ไม่ได้ใช้ ข้อมูลไม่ใช่ความลับทางธุรกิจในชุดม็อก แต่เป็นพื้นผิว API ที่เปิดเกินความจำเป็น (least privilege)</td>
+      <td>pg_policies วันนี้: categories_read และ menu_item_categories_read, qual=true, cmd=SELECT, roles anon/authenticated; grants เหลือ SELECT; db/001 ระบุ US-101 ยังไม่ใช้; รายงาน SQLi v1.0 รายการ AUTHZ-02 วันที่ 19 พ.ย. 2026 Production v1.0.2 (ผลจากรายงานเดิม)</td>
+      <td class="sev-low">Low</td>
+      <td>REVOKE SELECT ของ anon/authenticated บนตารางที่ UI ยังไม่ใช้ หรือเปลี่ยนนโยบายให้ไม่เปิดอ่านจนกว่าจะมีสตอรีที่ต้องใช้ วิธียืนยัน: GET /rest/v1/categories และ /rest/v1/menu_item_categories ด้วย publishable key ต้องถูกปฏิเสธ ส่วน GET เมนูของหน้าเว็บยังได้ 200</td>
+      <td>ส่งต่อ 202 ให้ลดสิทธิ์อ่านตารางที่ยังไม่ใช้ แล้วให้ 203 ตรวจซ้ำว่าหน้าเมนูยังทำงาน</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-14</td>
+      <td>IDOR และแยกข้อมูลระหว่างองค์กรหรือระหว่างผู้ใช้</td>
+      <td>WSTG-ATHZ-02; OWASP API1 BOLA</td>
+      <td>ทบทวนโมเดลข้อมูลและฟังก์ชันที่มี</td>
+      <td>อ่าน Design/Data_Model.md, db/001 และ User Story ไม่พบตารางคำสั่งซื้อ บัญชีผู้ใช้ใน schema ที่แอปใช้ หรือตัวระบุทรัพยากรรายบุคคล</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ในขอบเขต US-101 ไม่มีข้อมูลที่เป็นของแต่ละผู้ใช้หรือแต่ละองค์กร ไม่มีรหัสคำสั่งซื้อหรือเอกสารส่วนตัวให้ทดสอบ IDOR การแยกสิทธิ์ระหว่างองค์กรจึงยังไม่มีวัตถุให้ตรวจ ข้อที่เกี่ยวกับการอ่านแถวเมนูที่ซ่อนบันทึกไว้แล้วที่ WSR-12</td>
+      <td>Data_Model.md และ db/001 มีเพียง menu_items, categories, menu_item_categories; ตะกร้าไม่ถูกบันทึกในฐานข้อมูล</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีสตอรีคำสั่งซื้อหรือข้อมูลรายผู้ใช้ ให้ตรวจ BOLA/IDOR ใหม่ทั้งฝั่งเซิร์ฟเวอร์</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">05. Session Management และ CSRF</th></tr>
+    <tr>
+      <td class="id">WSR-15</td>
+      <td>Cookie ของโดเมนแอปและโดเมน API (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-SESS-02; WSTG-CLNT (หมวด)</td>
+      <td>สังเกต Set-Cookie จากคำตอบของหน้าเว็บตามปกติและจาก GET API ที่แอปใช้</td>
+      <td>อ่าน header ของ https://vibecode-office-food.vercel.app/ และของ GET เมนูบน supabase.co ไม่ได้คัดลอกค่าคุกกี้มาไว้ในรายงาน</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: โดเมนแอป (Vercel) ไม่ตั้ง Set-Cookie เลย คุกกี้ที่พบมีเพียงคุกกี้ของ Cloudflare ฝั่ง supabase.co ชื่อ __cf_bm ซึ่งมีคุณสมบัติ Secure, HttpOnly, SameSite=None, Partitioned, Path=/, Domain=supabase.co ใช้เพื่อบริหารบอต ไม่ใช่เซสชันของผู้ใช้แอป ค่าคุกกี้ถูกปกปิดในรายงานนี้</td>
+      <td>header หน้าแรกของ Vercel ไม่มี Set-Cookie; header GET เมนูของ Supabase มี __cf_bm พร้อมคุณสมบัติที่ระบุ (ไม่บันทึกค่า)</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-16</td>
+      <td>อายุเซสชันและการยกเลิกเซสชันเมื่อ Logout</td>
+      <td>WSTG-SESS-06; WSTG-SESS-07</td>
+      <td>ทบทวนฟังก์ชันที่มีจริง</td>
+      <td>สำรวจหน้าเว็บและโค้ด ไม่มีสถานะล็อกอินหรือปุ่มออกจากระบบ</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ไม่มีเซสชันผู้ใช้ให้หมดอายุหรือยกเลิกเมื่อ Logout ในขอบเขต US-101</td>
+      <td>ไม่มีโค้ดจัดการเซสชันใน js/; ดู WSR-10</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีล็อกอิน ให้ตรวจอายุเซสชัน การหมดอายุฝั่งเซิร์ฟเวอร์ และการทำลายเซสชันตอนออกจากระบบ</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-17</td>
+      <td>การป้องกันคำขอเปลี่ยนข้อมูลจากเว็บไซต์อื่น (CSRF)</td>
+      <td>WSTG-SESS-05; OWASP API (ด้านคุ้มครองคำขอเปลี่ยนข้อมูล)</td>
+      <td>ทบทวนลักษณะคำขอที่แอปใช้และความสัมพันธ์กับคุกกี้</td>
+      <td>อ่าน js/app.js และ js/cart.js รวมผลสิทธิ์เขียนจาก WSR-11 การเปลี่ยนข้อมูลในแอปมีเพียงสถานะตะกร้าในหน่วยความจำ ไม่มีคำขอ POST/PATCH/DELETE จากหน้าเว็บ</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: หน้าเว็บไม่ส่งคำขอเปลี่ยนข้อมูลไปเซิร์ฟเวอร์ และไม่มีคุกกี้เซสชันบนโดเมนแอป การเรียก API ใช้หัว Authorization (ไม่ถูกส่งอัตโนมัติจากฟอร์มข้ามไซต์) สิทธิ์เขียนของ anon ถูกถอนแล้วจึงไม่มีฟังก์ชันเปลี่ยนข้อมูลให้โจมตีด้วย CSRF ในขอบเขตนี้</td>
+      <td>js/app.js มีเพียง fetch แบบ GET; ไม่มี Set-Cookie บนโดเมนแอป; grants เหลือ SELECT (WSR-11)</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีคำขอเปลี่ยนข้อมูลที่อาศัยเซสชันหรือคุกกี้ ให้ใส่การป้องกัน CSRF ที่เหมาะสมแล้วตรวจซ้ำ</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">06. SQL Injection</th></tr>
+    <tr>
+      <td class="id">WSR-18</td>
+      <td>โค้ดไคลเอนต์และการเรียก PostgREST ของหน้าเมนู (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-INPV-05; NIST SP 800-115 §4</td>
+      <td>ทบทวนโค้ดที่นำค่าไปใช้กับฐานข้อมูล</td>
+      <td>อ่าน js/app.js ทั้งไฟล์ ค้นหาการประกอบ SQL หรือเรียก RPC จากคลังแอป</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: หน้าเว็บไม่ได้ประกอบคำสั่ง SQL เอง การอ่านเมนูใช้ URL ของ PostgREST ที่ค่าตัวกรองถูกกำหนดคงที่ในโค้ด (is_available=eq.true และลำดับคอลัมน์คงที่) ไม่มีช่องค้นหา ล็อกอิน หรือรายงานที่รับอินพุตผู้ใช้ไปต่อกับ SQL ในแอปนี้</td>
+      <td>js/app.js ฟังก์ชัน loadMenu(); ไม่พบคำว่า SQL, rpc, หรือการต่อสตริงคำสั่งฐานข้อมูลใน js/</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในโค้ดปัจจุบัน หากเพิ่มค้นหา/กรองจากอินพุตผู้ใช้ ให้คงการใช้ตัวกรองของ PostgREST หรือพารามิเตอร์ที่ถูกผูกค่า และห้ามต่อสตริง SQL</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-19</td>
+      <td>ชั้น PostgREST / ฐานข้อมูลเมื่อได้รับอินพุตที่อาจเป็นคำสั่ง SQL (หลักฐานจากรายงานเดิม)</td>
+      <td>WSTG-INPV-05; PTES Vulnerability Analysis; NIST SP 800-115 §4</td>
+      <td>ทบทวนผลตรวจเชิงรุกที่ได้รับอนุญาตก่อนหน้า ไม่ยิง payload ซ้ำในรอบนี้</td>
+      <td>อ่านรายงาน US-101_sqli_test_v1.0.html ทั้งฉบับ (วันที่ 19 พ.ย. 2026, Production web v1.0.2, ข้อมูลม็อก) ซึ่งเจ้าของระบบเคยอนุญาตให้ทดสอบเชิงรุกในขอบเขตที่กำหนด รอบทบทวนนี้เป็นแบบสังเกตเท่านั้น จึงไม่ส่ง payload และไม่เรียกคำสั่งเขียน</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ตามรายงานเดิม ยิง 16 รายการแล้วไม่พบช่องโหว่ SQL injection ค่าที่ส่งผ่านตัวกรองของ PostgREST ถูกทำให้เป็น literal หรือถูกบล็อกที่ขอบ (Cloudflare WAF ของ Supabase, 403) ไม่มีคำสั่งไปรันในฐานข้อมูล การเขียนทุกวิธีถูกปฏิเสธและชุดข้อมูลม็อกไม่เปลี่ยน ข้อสรุปนี้เป็นการอ้างผลรายงานเดิม ไม่ได้ทำซ้ำในรอบเชิงสังเกต</td>
+      <td>รายงาน Design/Security/US-101_sqli_test_v1.0.html วันที่ 19 พ.ย. 2026 สภาพแวดล้อม Production v1.0.2 (ผลจากรายงานเดิม) รายการเกี่ยวกับ payload คลาสสิก, UNION, stacked, boolean และสรุปว่าไม่พบ SQLi</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในประเด็น SQL injection ตามหลักฐานที่มี คงการใช้ PostgREST / ค่าที่ถูกผูก และอย่าเปิด raw SQL ให้ผู้ใช้</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">07. Cross-Site Scripting (XSS)</th></tr>
+    <tr>
+      <td class="id">WSR-20</td>
+      <td>การสะท้อนข้อมูลจากที่อยู่หรืออินพุตทันทีบนหน้าแรก (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-INPV-01</td>
+      <td>ทบทวนโค้ดว่ามีการนำค่าจาก URL หรืออินพุตผู้ใช้ไปแสดงทันทีหรือไม่</td>
+      <td>อ่าน js/app.js และ index.html ทั้งไฟล์ ค้นหา location, search, hash, innerHTML ที่เกี่ยวกับอินพุตผู้ใช้</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ไม่มีช่องอินพุตและโค้ดไม่ได้อ่านค่าจาก query string หรือ fragment ไปแสดงผล จึงไม่พบพื้นผิว XSS แบบสะท้อนในหน้านี้</td>
+      <td>js/app.js ไม่พบ location.search / URLSearchParams / document.write; หน้าเว็บไม่มีฟอร์ม</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>หากเพิ่มช่องค้นหาหรือการอ่านพารามิเตอร์จาก URL ต้องเข้ารหัสตามบริบทก่อนแสดงผลแล้วตรวจซ้ำ</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-21</td>
+      <td>การแสดงข้อมูลเมนูที่มาจากฐานข้อมูล (XSS แบบบันทึก บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-INPV-02; WSTG-CLNT-01 (หมวด)</td>
+      <td>ทบทวนการเข้ารหัสตอนแสดงผลและสิทธิ์การเขียนข้อมูล</td>
+      <td>อ่านฟังก์ชัน esc(), renderMenu(), renderSummary() และ showMenuState() ใน js/app.js รวมสิทธิ์เขียนจาก WSR-11 ข้อสังเกตเรื่อง onerror แบบ inline ในรายงาน v1.0 รายการ S-16 ถูกแก้แล้วใน v1.0.2</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ค่าจากฐานข้อมูลที่นำไปประกอบ HTML (id, ชื่อ, หมวด, ราคา, image_url, ข้อความผิดพลาด) ผ่านฟังก์ชัน esc() ซึ่งแปลง &amp;, &amp;lt;, &amp;gt;, เครื่องหมายคำพูด และเครื่องหมายอะพอสทรอฟี ก่อนใส่ innerHTML ผู้ใช้ทั่วไปเขียนข้อมูลเมนูไม่ได้ (WSR-11) ข้อสังเกต S-16 เรื่องตัวจัดการ onerror แบบ inline ถูกย้ายเป็น addEventListener ใน v1.0.2 เพื่อให้เข้ากับ CSP ที่ไม่อนุญาตสคริปต์ในบรรทัด และตรวจพบในโค้ดที่เสิร์ฟวันนี้แล้ว image_url ถูกใส่ในแอตทริบิวต์ src หลัง escape และถูกจำกัดเพิ่มด้วย CSP img-src &#x27;self&#x27; https: data:</td>
+      <td>js/app.js ฟังก์ชัน esc และจุดที่เรียกใช้; ตัวจัดการ error ของรูปที่ menu-grid; รายงาน v1.0 รายการ S-16 และโค้ดคอมเมนต์ S-04/S-16 ใน v1.0.2; CSP บน Production</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ในขอบเขตปัจจุบัน คงการใช้ esc() กับทุกค่าที่ประกอบ HTML และอย่าใส่สคริปต์ในบรรทัด</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-22</td>
+      <td>การประกอบ DOM จากสถานะตะกร้าในเบราว์เซอร์ (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CLNT-01</td>
+      <td>ทบทวนการแสดงผลจากสถานะฝั่งไคลเอนต์</td>
+      <td>อ่าน renderSummary() และ addItem() จำนวนสินค้าถูกเพิ่มเป็นจำนวนเต็มในโค้ด ไม่ได้อ่านจากอินพุตอิสระ</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: รายการในสรุปใช้ชื่อและราคาที่ผ่าน esc() จำนวน (qty) มาจากการนับใน addItem() ซึ่งเพิ่มขึ้นทีละ 1 จากค่าเริ่ม 1 ไม่พบการใช้ eval หรือ document.write</td>
+      <td>js/cart.js addItem(); js/app.js renderSummary()</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">08. Input Validation อื่น ๆ</th></tr>
+    <tr>
+      <td class="id">WSR-23</td>
+      <td>Command Injection และ Template Injection</td>
+      <td>WSTG-INPV-11; WSTG-INPV-18 (หมวด)</td>
+      <td>ทบทวนฟังก์ชันที่อาจส่งค่าไปเชลล์หรือเทมเพลตฝั่งเซิร์ฟเวอร์</td>
+      <td>ทบทวนสถาปัตยกรรม: หน้าเว็บเป็นไฟล์คงที่บน Vercel ไม่มีเซิร์ฟเวอร์ประมวลผลคำสั่งหรือเรนเดอร์เทมเพลตตามอินพุตผู้ใช้ ส่วนหลังบ้านที่แอปเรียกคือ PostgREST สำหรับอ่านเมนูเท่านั้น</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ไม่มีฟังก์ชันสร้างเอกสาร ประมวลผลคำสั่งระบบ หรือเทมเพลตฝั่งเซิร์ฟเวอร์ที่รับอินพุตผู้ใช้ในขอบเขต US-101</td>
+      <td>คลังเป็นไฟล์คงที่ (index.html, js, css) ไม่มี API เซิร์ฟเวอร์ของแอปเอง; vercel.json มีแต่ headers</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีฟังก์ชันสร้างเอกสารหรือเรียกคำสั่งระบบ ให้ตรวจหมวดนี้ใหม่</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-24</td>
+      <td>Path Traversal ของเส้นทางไฟล์บนโดเมนแอป</td>
+      <td>WSTG-ATHZ-01 (หมวดไฟล์); WSTG-CONF-05</td>
+      <td>ทบทวนว่ามีพารามิเตอร์เส้นทางไฟล์หรือไม่ และตรวจเส้นทางอ่อนไหวที่ทราบ</td>
+      <td>อ่านโค้ดแล้วไม่พบพารามิเตอร์ชื่อไฟล์จากผู้ใช้ ตรวจ HEAD เส้นทางอ่อนไหวที่ทราบ (.git, .env, db/) ได้ 404</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: แอปไม่รับเส้นทางไฟล์จากผู้ใช้ไปเปิดบนเซิร์ฟเวอร์ ไฟล์ถูกเสิร์ฟแบบคงที่ เส้นทางภายในที่ตรวจแล้วไม่ถูกเปิด</td>
+      <td>ไม่มีพารามิเตอร์ไฟล์ใน js/; HEAD /.git/HEAD และ /.env และ /db/ ได้ 404</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-25</td>
+      <td>SSRF การให้เซิร์ฟเวอร์ดึง URL ตามผู้ใช้</td>
+      <td>WSTG-INPV-19; OWASP API (หมวด SSRF ที่เกี่ยวข้อง)</td>
+      <td>ทบทวนฟังก์ชันที่เซิร์ฟเวอร์อาจไปเรียก URL ตามอินพุต</td>
+      <td>อ่านโค้ดและ User Story หน้าเว็บโหลดรูปในเบราว์เซอร์ตาม image_url จากฐานข้อมูล ไม่มีเส้นทางให้เซิร์ฟเวอร์ของแอปไปดึง URL ที่ผู้ใช้กำหนด</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ไม่มีฟังก์ชันฝั่งเซิร์ฟเวอร์ของแอปที่รับ URL จากผู้ใช้แล้วไปดึงต่อ การโหลดรูปเกิดในเบราว์เซอร์ของผู้ใช้ และผู้ใช้ทั่วไปตั้ง image_url ไม่ได้</td>
+      <td>js/app.js ใส่ image_url ใน &amp;lt;img src&amp;gt; ฝั่งไคลเอนต์; ไม่มีเซิร์ฟเวอร์พร็อกซีในคลัง</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีฟังก์ชันให้เซิร์ฟเวอร์ดึง URL ภายนอก ให้จำกัดโฮสต์ปลายทางแล้วตรวจซ้ำ</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">09. File Upload และ Download</th></tr>
+    <tr>
+      <td class="id">WSR-26</td>
+      <td>การอัปโหลดไฟล์</td>
+      <td>WSTG-BUSL-08; WSTG-ATHZ-01 (หมวดไฟล์)</td>
+      <td>ทบทวนฟังก์ชันที่มีจริง</td>
+      <td>สำรวจหน้า Production และโค้ด ไม่พบฟอร์มหรือ API อัปโหลด</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ระบบในขอบเขต US-101 ไม่มีฟังก์ชันอัปโหลดไฟล์</td>
+      <td>ไม่มี input type=file และไม่มีการเรียก Storage API ใน js/</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีอัปโหลด ให้จำกัดชนิด ขนาด วิธีจัดเก็บ และการเข้าถึงก่อนเปิดไฟล์</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-27</td>
+      <td>การดาวน์โหลดหรือเปิดเอกสารส่วนตัว</td>
+      <td>WSTG-ATHZ-01; WSTG-ATHZ-02</td>
+      <td>ทบทวนว่ามีเอกสารส่วนตัวที่ต้องตรวจสิทธิ์ก่อนเปิดหรือไม่</td>
+      <td>สำรวจเส้นทางที่เปิดสาธารณะ เอกสารที่เสิร์ฟเป็นเอกสารการสอน/ทดสอบ/ม็อกของโปรเจกต์ ไม่ใช่เอกสารของแต่ละผู้ใช้</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ไม่มีเอกสารส่วนตัวหรือใบสั่งซื้อให้ตรวจสิทธิ์ก่อนดาวน์โหลด ไฟล์ที่เปิดได้เป็นเอกสารสาธารณะตามที่ทีมเผยแพร่ (ดู WSR-03)</td>
+      <td>รายการเส้นทางใน WSR-03; User Story ไม่มีเอกสารรายบุคคล</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีเอกสารส่วนตัว ให้บังคับใช้สิทธิ์ฝั่งเซิร์ฟเวอร์ก่อนเปิดหรือดาวน์โหลด</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">10. Business Logic</th></tr>
+    <tr>
+      <td class="id">WSR-28</td>
+      <td>ราคาและการคำนวณสรุปรายการ (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-BUSL-01; WSTG-BUSL-06 (หมวด); NIST SP 800-115 §4</td>
+      <td>ทบทวนโค้ดการคำนวณและข้อกำหนด รวมหลักฐานข้อจำกัดฝั่งฐานข้อมูล</td>
+      <td>อ่าน js/cart.js (lineTotal, totals, formatBaht), ข้อ BA-C1/AC5 ใน User Story และข้อ CHECK price &gt; 0 ใน db/001 ไม่มีเส้นทางส่งคำสั่งซื้อไปเซิร์ฟเวอร์ให้ตรวจการบังคับใช้ราคาฝั่งเซิร์ฟเวอร์ตอนชำระเงิน</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ราคาที่แสดงมาจากฐานข้อมูลผ่าน API หน้าเว็บคำนวณราคารวมในเบราว์เซอร์ด้วยการแปลงเป็นสตางค์แล้วจัดรูปแบบทศนิยม 2 ตำแหน่ง ในขอบเขต US-101 ไม่มีการยืนยันคำสั่งซื้อหรือชำระเงิน จึงยังไม่มีจุดที่เซิร์ฟเวอร์ต้องบังคับใช้ราคาตอนทำธุรกรรม ข้อ CHECK price &gt; 0 อยู่ในสคีมาสำหรับเส้นทางเขียนซึ่งผู้ใช้ทั่วไปใช้ไม่ได้ การที่ผู้ใช้แก้ตัวเลขในเบราว์เซอร์ได้มีผลแค่หน้าจอของตนเองและหายเมื่อรีเฟรช ตามออกแบบ (BA-C2)</td>
+      <td>js/cart.js; US-101_user_story.md AC5, BA-C1, BA-C2; db/001 CHECK (price &gt; 0)</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีสตอรีส่งคำสั่งซื้อหรือชำระเงิน ต้องให้เซิร์ฟเวอร์คำนวณราคาจากข้อมูลในฐานข้อมูลอีกครั้ง ห้ามเชื่อราคาส่งมาจากไคลเอนต์ แล้วตรวจซ้ำด้วยชุดทดสอบธุรกิจ</td>
+      <td>บันทึกเป็นเงื่อนไขสำหรับสตอรีถัดไป ไม่ต้องแก้ US-101</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-29</td>
+      <td>ส่วนลด สถานะชำระเงิน การอนุมัติ คืนเงิน และการป้องกันประมวลผลธุรกรรมซ้ำ</td>
+      <td>WSTG-BUSL (หมวด); NIST SP 800-115 §4</td>
+      <td>ทบทวนฟังก์ชันที่มีจริงตามขอบเขต</td>
+      <td>อ่าน User Story ส่วนนอกขอบเขตและโค้ดแอป</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-na">ไม่เกี่ยวข้อง: ไม่มีส่วนลด การชำระเงิน การอนุมัติ คืนเงิน หรือการบันทึกธุรกรรมในขอบเขต US-101</td>
+      <td>US-101_user_story.md ส่วนขอบเขตและนอกขอบเขต</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>เมื่อมีฟังก์ชันเหล่านี้ ให้ตรวจการบังคับใช้ฝั่งเซิร์ฟเวอร์และความป้องกันทำซ้ำ</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-30</td>
+      <td>การเก็บสรุปรายการในหน่วยความจำตาม BA-C2 (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-BUSL (หมวด); WSTG-CLNT-12 (เกี่ยวข้องกับการเก็บสถานะ)</td>
+      <td>ทบทวนโค้ดการเก็บสถานะตะกร้า</td>
+      <td>อ่าน js/cart.js, js/app.js และข้อ BA-C2 ไม่พบการใช้ที่เก็บข้อมูลถาวรในเบราว์เซอร์สำหรับตะกร้า</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ตะกร้าอยู่ในตัวแปรในหน่วยความจำเท่านั้น ตามข้อกำหนด BA-C2 การรีเฟรชหน้าจะล้างรายการ เป็นพฤติกรรมที่ตั้งใจในขอบเขตนี้ ไม่ได้บันทึกลงฐานข้อมูล</td>
+      <td>js/cart.js คำอธิบายต้นไฟล์; ไม่พบ localStorage/sessionStorage ใน js/ และ index.html; US-101_user_story.md BA-C2</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้ใน US-101 หากสตอรีถัดไปต้องการคงตะกร้า ให้ประเมินความเสี่ยงของที่เก็บฝั่งไคลเอนต์แยกต่างหาก</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">11. API Security</th></tr>
+    <tr>
+      <td class="id">WSR-31</td>
+      <td>การยืนยันตัวตนของ PostgREST และการวางคีย์ฝั่งเบราว์เซอร์ (บทบาท: anon)</td>
+      <td>OWASP API2 Broken Authentication; WSTG-CONF-05; WSTG-INFO-08 (หมวด)</td>
+      <td>ทบทวนชนิดคีย์ในไฟล์สาธารณะและค้นหาคีย์ลับในคลังแอป</td>
+      <td>อ่าน js/config.js บน Production และในคลัง ค้นหาในซอร์สแอป/ฐานข้อมูลว่ามี sb_secret_, service_role หรือกุญแจส่วนตัวหรือไม่ (ไม่เปิดค่าในรายงาน)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: คีย์ในไฟล์สาธารณะเป็น publishable key (ขึ้นต้น sb_publishable_…) ซึ่งออกแบบมาให้ใช้ฝั่งเบราว์เซอร์ได้เท่าที่ RLS และ GRANT อนุญาต ไม่พบ secret/service_role key หรือกุญแจส่วนตัวในซอร์สแอปที่ตรวจ ค่าคีย์ถูกละไว้บางส่วนในรายงานนี้ สอดคล้องผลเดิม S-10 ในรายงาน v1.0 (19 พ.ย. 2026)</td>
+      <td>js/config.js บน Production ระบุ APP_VERSION 1.0.2 และคีย์ชนิด sb_publishable_…; การค้นในซอร์สแอป/db ไม่พบ sb_secret_ หรือ service_role; รายงาน v1.0 รายการ S-10</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>คงใช้เฉพาะ publishable key ฝั่งเบราว์เซอร์ ห้ามใส่ secret key ในคลังหรือไฟล์ที่ deploy</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-32</td>
+      <td>สิทธิ์ระดับรายการข้อมูล (BOLA) ของ API เมนู (บทบาท: anon)</td>
+      <td>OWASP API1 Broken Object Level Authorization; WSTG-ATHZ-02</td>
+      <td>ทบทวนโมเดลสิทธิ์ระดับแถวจากนโยบายและรายงานเดิม</td>
+      <td>ใช้หลักฐานเดียวกับ WSR-12 และ WSR-14 ไม่ได้เรียกแถวที่ซ่อนผ่าน REST ในรอบนี้</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-def">พบข้อบกพร่องที่ยืนยันได้: ไม่มีทรัพยากรที่เป็นของแต่ละผู้ใช้ แต่ระดับแถวของเมนูไม่บังคับใช้เงื่อนไข is_available ฝั่งเซิร์ฟเวอร์ (รายละเอียดและการแก้ไขอยู่ที่ WSR-12) จึงถือว่ามีช่องว่าง BOLA/การกรองแถวในความหมายของข้อมูลที่ UI ตั้งใจซ่อน</td>
+      <td>อ้าง WSR-12 และรายงาน SQLi v1.0 รายการ AUTHZ-01 วันที่ 19 พ.ย. 2026 Production v1.0.2</td>
+      <td class="sev-low">Low</td>
+      <td>แก้ตาม WSR-12 แล้วตรวจซ้ำด้วยบทบาท anon ว่าแถวที่ซ่อนไม่ถูกคืนจาก API</td>
+      <td>รวมกับ WSR-12 ส่งต่อ 202 และ 203</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-33</td>
+      <td>สิทธิ์ระดับฟิลด์ (BOPLA) ของตาราง menu_items (บทบาท: anon)</td>
+      <td>OWASP API3 Broken Object Property Level Authorization</td>
+      <td>ทบทวนคอลัมน์ที่สิทธิ์ SELECT ครอบคลุมจากสคีมา ไม่ได้ขอคอลัมน์เพิ่มผ่าน REST นอกชุดที่แอปใช้ในรอบนี้</td>
+      <td>อ่าน db/001 และ Data_Model.md ประกอบกับ GRANT SELECT ทั้งตาราง (WSR-11) หน้าเว็บเลือกเฉพาะ id, name, price, category, image_url, is_available, sort_order</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: สิทธิ์ SELECT ทั้งตารางทำให้คอลัมน์อื่นที่ไม่มีในหน้าเว็บ (เช่น created_at, updated_at) อ่านได้ในหลักการหากผู้เรียกขอเอง คอลัมน์เหล่านี้ไม่ใช่ข้อมูลอ่อนไหวในบริบทเมนูสาธารณะ ยังไม่พบฟิลด์ลับ (รหัสผ่าน โทเคน ข้อมูลส่วนบุคคล) ในสคีมาที่แอปใช้</td>
+      <td>db/001 คอลัมน์ของ menu_items; GRANT SELECT ทั้งตาราง; ชุด select ใน js/app.js</td>
+      <td class="sev-none">ไม่มี (ข้อสังเกต)</td>
+      <td>หากในอนาคตมีคอลัมน์ภายใน ให้จำกัดคอลัมน์ด้วยการเพิกถอนสิทธิ์ระดับคอลัมน์หรือใช้วิวที่เปิดเฉพาะฟิลด์สาธารณะ แล้วตรวจซ้ำว่าขอฟิลด์ภายในไม่ได้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-34</td>
+      <td>สิทธิ์ระดับฟังก์ชัน (BFLA) การเขียน REST และ RPC (บทบาท: anon)</td>
+      <td>OWASP API5 Broken Function Level Authorization; WSTG-ATHZ-01</td>
+      <td>ทบทวนสิทธิ์ปัจจุบันและผลรายงานเดิม ไม่ส่ง POST/PATCH/DELETE หรือเรียก RPC ในรอบนี้</td>
+      <td>ยืนยัน GRANT เหลือ SELECT วันนี้ และอ่านรายงาน US-101_sqli_test_v1.0 รายการ WRITE-01 ถึง WRITE-04 และ RPC-01 (19 พ.ย. 2026, Production v1.0.2) ซึ่งบันทึกว่าการเขียนถูกปฏิเสธ 401 และฟังก์ชัน set_updated_at ไม่ได้เปิดเป็น RPC</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: จากสิทธิ์ปัจจุบัน anon ไม่มีฟังก์ชันเขียนให้เรียก และตามรายงานเดิมการพยายาม INSERT/UPDATE/DELETE/UPSERT ถูกปฏิเสธ 401 โดยชุดข้อมูลม็อกไม่เปลี่ยน (12 แถว, มีขาย 10, รวมราคา 1,781.25 ซึ่งวันนี้ยังนับได้ค่าเดิม) RPC ของ set_updated_at ไม่ถูกเปิด รอบนี้ไม่ได้ยิงคำขอเขียนซ้ำ</td>
+      <td>role_table_grants วันนี้ = SELECT เท่านั้น; รายงาน SQLi v1.0 รายการ WRITE-01..04 และ RPC-01 วันที่ 19 พ.ย. 2026 Production v1.0.2; นับแถวอ่านอย่างเดียววันนี้ตรงกับค่าฐานเดิม</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>คงการถอนสิทธิ์เขียนและไม่เปิด RPC ที่ไม่จำเป็น</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-35</td>
+      <td>บัญชีรายการ OpenAPI ของ PostgREST ราก /rest/v1/ (บทบาท: anon)</td>
+      <td>WSTG-CONF-05; OWASP API9 Inventory</td>
+      <td>GET รากของ REST ด้วย publishable key (อ่านอย่างเดียว ไม่ส่ง payload)</td>
+      <td>ส่ง GET https://yhcjsgbffgabsmsybnle.supabase.co/rest/v1/ พร้อม Accept แบบ OpenAPI และ JSON โดยใช้ publishable key เท่านั้น</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: การขอสคีมา OpenAPI รวมด้วย publishable key ถูกปฏิเสธ HTTP 401 เนื้อความระบุว่าต้องใช้ secret API key เท่านั้น สอดคล้องผลเดิม INFO-01 ในรายงาน SQLi v1.0 (19 พ.ย. 2026) ผู้ใช้ทั่วไปจึงดูบัญชีรายการ API รวมจากจุดนี้ไม่ได้</td>
+      <td>GET /rest/v1/ วันนี้ HTTP 401 ข้อความ Secret API key required (ไม่เปิดคีย์ลับ); รายงาน SQLi v1.0 รายการ INFO-01</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-36</td>
+      <td>ข้อจำกัดอัตราการเรียกใช้ API (rate limiting)</td>
+      <td>OWASP API4 Unrestricted Resource Consumption; WSTG-BUSL (หมวด); NIST SP 800-115 §4</td>
+      <td>ทบทวนหลักฐานที่มีโดยไม่ทดสอบภาระหรือส่งคำขอจำนวนมาก</td>
+      <td>อ่านรายงานเดิมรายการ INFO-02 (ชุดข้อมูลเล็ก คืนเท่าที่มี) และไม่ทำโหลดทดสอบในรอบเชิงสังเกตนี้ เพราะอยู่นอกวิธีที่อนุญาต</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-unk">ยังยืนยันไม่ได้: ไม่มีหลักฐานเพียงพอจากค่าตั้งค่าที่เข้าถึงได้ในรอบนี้ว่ามีการจำกัดจำนวนคำขอหรือจำนวนแถวสูงสุดในชั้น API การยืนยันต้องอาศัยค่าตั้งค่า (เช่น db-max-rows) หรือการทดสอบภาระที่ได้รับอนุญาตแยกต่างหาก รายงานเดิมระบุเพียงข้อสังเกตว่าชุดม็อกขนาดเล็กคืน 12 แถวเมื่อขอจำนวนมาก ซึ่งยังไม่พอสรุปมาตรการจำกัดการใช้</td>
+      <td>ไม่มีค่าตั้งค่า rate limit/db-max-rows ในคลังแอป; รายงาน SQLi v1.0 รายการ INFO-02 วันที่ 19 พ.ย. 2026 เป็นข้อสังเกตกับชุดเล็กเท่านั้น ไม่ได้ยืนยันในรอบนี้ด้วยการทดสอบภาระ</td>
+      <td class="sev-none">ไม่มี (หลักฐานไม่พอ)</td>
+      <td>หากข้อมูลเติบโต ควรตั้งขีดจำกัดจำนวนแถวและเฝ้าอัตราเรียกใช้ แล้วให้ผู้ที่ได้รับอนุญาตยืนยันจากค่าตั้งค่าหรือการทดสอบที่ออกแบบมาเฉพาะ</td>
+      <td>ส่งต่อเป็นประเด็นที่ยังยืนยันไม่ได้ ไม่ใช่ข้อบกพร่องที่ยืนยันได้ ต้องการหลักฐานค่าตั้งค่าจากผู้ดูแล Supabase หรือการทดสอบที่ได้รับอนุญาต</td>
+    </tr>
+    <tr><th colspan="11">12. Error Handling, Sensitive Data และ Cryptography</th></tr>
+    <tr>
+      <td class="id">WSR-37</td>
+      <td>ข้อความผิดพลาดบนหน้าเว็บเมื่อโหลดเมนูไม่สำเร็จ (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-ERRH-01</td>
+      <td>ทบทวนโค้ดการแสดงข้อผิดพลาด ไม่ได้จงใจทำให้ระบบล้มเหลว</td>
+      <td>อ่าน showMenuState() และ loadMenu() ใน js/app.js</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ผู้ใช้เห็นข้อความภาษาไทยทั่วไป (เช่น ไม่สามารถโหลดเมนูได้ในขณะนี้ หรือแจ้งว่าไม่มีการเชื่อมต่อ) รายละเอียดทางเทคนิคถูกเขียนใน console ของเบราว์เซอร์เป็นข้อความสั้น ๆ ไม่แสดงสแตกหรือค่าคีย์บนหน้าจอ สอดคล้องผลเดิม S-18 ในรายงาน v1.0 (19 พ.ย. 2026)</td>
+      <td>js/app.js บรรทัด catch และ showMenuState(&#x27;error&#x27;, …); รายงาน v1.0 รายการ S-18</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-38</td>
+      <td>ข้อความผิดพลาดของ PostgREST เมื่อตัวกรองหรือคำขอไม่ถูกต้อง (หลักฐานจากรายงานเดิม)</td>
+      <td>WSTG-ERRH-01; WSTG-ERRH-02 (หมวด); OWASP API8 Security Misconfiguration (หมวด)</td>
+      <td>ทบทวนผลรายงานเดิม ไม่ส่งคำขอที่จงใจผิดรูปแบบในรอบนี้</td>
+      <td>อ่านรายงาน US-101_sqli_test_v1.0 รายการ SQLI-06 (19 พ.ย. 2026, Production v1.0.2)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-def">พบข้อบกพร่องที่ยืนยันได้: ตามรายงานเดิม คำตอบผิดพลาดของ PostgREST เผยชื่อคอลัมน์หรือชนิดข้อมูลได้ ซึ่งช่วยให้ผู้สังเกตแมปสคีมาได้แม้เรียกคำสั่งไม่สำเร็จ ผลกระทบจำกัดเพราะสคีมาเมนูสาธารณะมีเอกสารอยู่แล้วและคำสั่งไม่ถูกรัน ข้อนี้ไม่ได้ทำซ้ำในรอบเชิงสังเกต</td>
+      <td>รายงาน US-101_sqli_test_v1.0.html รายการ SQLI-06 วันที่ 19 พ.ย. 2026 สภาพแวดล้อม Production v1.0.2 (ผลจากรายงานเดิม)</td>
+      <td class="sev-low">Low</td>
+      <td>ตั้งค่าให้ PostgREST/เกตเวย์ส่งข้อความผิดพลาดแบบทั่วไปต่อผู้ใช้ anon หรือตัดรายละเอียดสคีมาจากเนื้อคำตอบสาธารณะ วิธียืนยัน: คำขอที่ผิดรูปแบบต้องไม่ระบุชื่อคอลัมน์หรือชนิดข้อมูลในเนื้อที่ผู้ใช้ทั่วไปอ่านได้ ส่วนหน้าเว็บยังแสดงข้อความภาษาไทยตามเดิม</td>
+      <td>ส่งต่อ 202 ให้ประเมินการตั้งค่าข้อความผิดพลาดของ PostgREST/ซ็อกเก็ต API แล้วให้ผู้ที่ได้รับอนุญาตตรวจซ้ำเฉพาะกรณีที่จำเป็น โดยไม่ขยายขอบเขตเกินที่เจ้าของระบบอนุญาต</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-39</td>
+      <td>การปกป้องข้อมูลระหว่างส่งของหน้าเว็บและ API</td>
+      <td>WSTG-CRYP-01; WSTG-CRYP-03 (หมวด); NIST SP 800-115 §4</td>
+      <td>สังเกตการใช้ HTTPS จากหน้าเว็บและการเรียก API ตามปกติ</td>
+      <td>เปิดหน้าเว็บด้วย HTTPS และเรียก GET เมนูผ่าน HTTPS อ่าน HSTS ของทั้งสองโฮสต์</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ทั้งโดเมนแอปและโดเมน Supabase ใช้ HTTPS โดเมนแอปมี HSTS ตาม WSR-07 โดเมน API มี Strict-Transport-Security: max-age=31536000; includeSubDomains; preload ในการตอบของคำขอเมนูที่ตรวจวันนี้</td>
+      <td>หัวข้อ WSR-05 และ WSR-07; header ของ GET เมนูบน supabase.co วันนี้</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-40</td>
+      <td>การปกป้องข้อมูลขณะจัดเก็บ และบันทึกระบบ (log)</td>
+      <td>WSTG-CRYP-04 (หมวด); WSTG-ERRH-02 (หมวด); NIST SP 800-115 §4; OSSTMM (ข้อจำกัดของหลักฐาน)</td>
+      <td>ทบทวนหลักฐานที่มีเกี่ยวกับการเข้ารหัสขณะเก็บและเนื้อหาใน log</td>
+      <td>ตรวจคลังและหน้าที่เข้าถึงได้ ไม่มีหน้าตั้งค่าการเข้ารหัสดิสก์ของฐานข้อมูลและไม่มีสิทธิ์อ่าน log ของ Vercel/Supabase ในรอบนี้ ข้อมูลในขอบเขตเป็นเมนูม็อก ไม่มีรหัสผ่านผู้ใช้ให้ตรวจวิธีการเก็บ</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-unk">ยังยืนยันไม่ได้: ไม่มีหลักฐานเพียงพอจะยืนยันหรือปฏิเสธการตั้งค่าเข้ารหัสขณะจัดเก็บของฐานข้อมูล หรือเนื้อหาที่ถูกบันทึกใน log ของผู้ให้บริการ จึงไม่สรุปว่าผ่านหรือพบข้อบกพร่อง ในขอบเขตแอปเองไม่มีการเก็บรหัสผ่านหรือหมายเลขชำระเงิน</td>
+      <td>ไม่มีค่าตั้งค่า encryption-at-rest หรือตัวอย่าง log ในคลังและในหน้าที่ได้รับอนุญาตให้เปิด</td>
+      <td class="sev-none">ไม่มี (หลักฐานไม่พอ)</td>
+      <td>หากต้องการปิดข้อนี้ ผู้ดูแลอาจให้หลักฐานการตั้งค่าเข้ารหัสขณะเก็บของโปรเจกต์ Supabase และนโยบายเก็บ log (โดยไม่ส่งข้อมูลลับมาในแชต) แล้วทบทวนเพิ่ม</td>
+      <td>ต้องการหลักฐานเพิ่มจากผู้ดูแลระบบคลาวด์ จึงยังไม่ส่งเป็นงานแก้ของ 202</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-41</td>
+      <td>ข้อมูลอ่อนไหวในไฟล์ที่เสิร์ฟสาธารณะและในคลังที่ deploy</td>
+      <td>WSTG-INFO-05; WSTG-CRYP (หมวด)</td>
+      <td>ทบทวนไฟล์สาธารณะและซอร์สแอป</td>
+      <td>ตรวจ js/config.js, เอกสารที่เปิดบน Production และซอร์สแอป ตาม WSR-03 และ WSR-31 ไม่คัดลอกคีย์เต็มหรือคุกกี้ลงรายงาน</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ไม่พบรหัสผ่าน โทเคนลับ ค่าเซสชัน หรือข้อมูลส่วนบุคคลในไฟล์ที่ตรวจ มีเพียง publishable key ซึ่งเป็นคีย์สาธารณะตามออกแบบ เอกสารที่เผยแพร่เป็นเอกสารการสอน/ทดสอบของโปรเจกต์</td>
+      <td>WSR-03, WSR-31; ไม่พบ sb_secret_ ในซอร์สแอป</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้เพิ่มจากข้อที่บันทึกใน WSR-04 (สื่อการสอนที่ยังไม่ถูก deploy)</td>
+      <td>—</td>
+    </tr>
+    <tr><th colspan="11">13. Client-Side Security</th></tr>
+    <tr>
+      <td class="id">WSR-42</td>
+      <td>CORS ของโดเมนแอปและโดเมน API (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CLNT-07; WSTG-CONF-08 (หมวด CORS)</td>
+      <td>อ่าน response header จากหน้าเว็บตามปกติและจาก GET API ที่แอปใช้</td>
+      <td>อ่าน Access-Control-Allow-Origin และหัวที่เกี่ยวข้องจากโดเมน Vercel และจากการตอบของ Supabase (รวมคำตอบ 401 ของราก REST)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: โดเมนแอปมี Access-Control-Allow-Origin: * ซึ่งเป็นค่าที่พบบ่อยของไฟล์คงที่บน Vercel ไม่มีคุกกี้หรือเซสชันบนโดเมนนี้จึงความเสี่ยงต่ำ สอดคล้องข้อสังเกต S-07 ในรายงาน v1.0 (19 พ.ย. 2026) โดเมน API มี Access-Control-Allow-Origin: * เช่นกันและไม่ได้ใช้คุกกี้เป็นตัวยืนยันตัวตนของแอป (ใช้หัว Authorization) จึงไม่เข้าเงื่อนไข credentialed CORS ที่อันตรายในขอบเขตนี้</td>
+      <td>header หน้าแรกของ Vercel วันนี้; header ของ /rest/v1/ วันนี้มี Allow-Origin: * ; รายงาน v1.0 รายการ S-07</td>
+      <td class="sev-none">ไม่มี (ข้อสังเกต)</td>
+      <td>ไม่จำเป็นต้องแก้ในขอบเขตปัจจุบัน หากภายหลังมีเซสชันแบบคุกกี้ข้ามโดเมน ต้องเลิกใช้ * ร่วมกับ credentials</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-43</td>
+      <td>การป้องกัน Clickjacking ของหน้าเว็บ (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CLNT-09</td>
+      <td>อ่าน header ป้องกันการฝังเฟรม</td>
+      <td>อ่าน X-Frame-Options และ CSP frame-ancestors จากหน้าแรกและไฟล์ static อ้างผลปิด S-05 ในรายงาน v1.1</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ข้อบกพร่อง S-05 ในรายงาน v1.0 ถูกปิดแล้วใน v1.1 (19 พ.ย. 2026, web v1.0.2) และยังยืนยันได้วันนี้ ทั้ง X-Frame-Options: DENY และ CSP frame-ancestors &#x27;none&#x27; มีครบ</td>
+      <td>header บน Production วันนี้; รายงาน v1.1 รายการที่ปิด S-05</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-44</td>
+      <td>การเก็บข้อมูลใน Browser Storage (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-CLNT-12</td>
+      <td>ทบทวนโค้ดว่ามีการเก็บข้อมูลอ่อนไหวใน localStorage, sessionStorage หรือ cookie ของแอปหรือไม่</td>
+      <td>ค้นใน js/ และ index.html และทบทวนการเก็บตะกร้าตาม BA-C2</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ไม่มีการเก็บข้อมูลใน localStorage หรือ sessionStorage และโดเมนแอปไม่ตั้งคุกกี้ ตะกร้าอยู่ในหน่วยความจำเท่านั้น ไม่มีข้อมูลรับรองหรือข้อมูลส่วนบุคคลให้เก็บฝั่งไคลเอนต์</td>
+      <td>ไม่พบ localStorage/sessionStorage/document.cookie ใน js/ และ index.html; WSR-15, WSR-30</td>
+      <td class="sev-none">ไม่มี</td>
+      <td>ไม่ต้องแก้</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td class="id">WSR-45</td>
+      <td>ส่วนประกอบฝั่งไคลเอนต์ภายนอก (บทบาท: ผู้ใช้ทั่วไป)</td>
+      <td>WSTG-INFO-08; NIST SP 800-115 §4</td>
+      <td>ทบทวนสคริปต์ สไตล์ และรูปที่โหลดจากภายนอก</td>
+      <td>อ่าน index.html, CSP และผลเดิม S-17 ในรายงาน v1.0 (19 พ.ย. 2026)</td>
+      <td class="st-ok">ตรวจสำเร็จ</td>
+      <td class="f-pass">ผ่านในขอบเขตที่ตรวจ: ไม่มีไลบรารีจาวาสคริปต์ภายนอก แอปใช้โมดูลในโปรเจกต์เอง โหลดภายนอกเพียง Google Fonts (CSS/ฟอนต์) ซึ่ง CSP อนุญาตไว้เฉพาะโฮสต์นั้น และรูปจาก URL แบบ https ตามข้อมูลเมนู (ม็อกใช้ placehold.co) ไม่สามารถใส่ SRI ให้ CSS ของ Google Fonts ได้สะดวกในทางปฏิบัติ ความเสี่ยงอยู่ในระดับที่ยอมรับได้สำหรับแอปนี้</td>
+      <td>index.html ลิงก์ fonts.googleapis.com; CSP style-src/font-src; ไม่มี &amp;lt;script src&amp;gt; ภายนอก; รายงาน v1.0 รายการ S-17</td>
+      <td class="sev-none">ไม่มี (ข้อสังเกต)</td>
+      <td>ไม่จำเป็นต้องแก้ หากต้องการลดการพึ่งพาภายนอกให้โฮสต์ฟอนต์เองแล้วปรับ CSP แล้วตรวจซ้ำว่าหน้าเว็บยังแสดงผลได้</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<section class="card">
+  <h2>ประเด็นส่งต่อเพื่อปิดงาน</h2>
+  <ul>
+    <li><strong>202 Vibe Code Agent:</strong> แก้ WSR-12/WSR-32 (นโยบาย RLS ของ menu_items ให้บังคับ is_available ฝั่งเซิร์ฟเวอร์), WSR-13 (ลดสิทธิ์อ่านตารางที่ US-101 ยังไม่ใช้), พิจารณา WSR-38 (ข้อความผิดพลาดของ PostgREST), และกันโฟลเดอร์ Design/Teaching/ ออกจากชุด deploy ตาม WSR-04 ก่อนนำสื่อการสอนเข้า git จากนั้นใส่รายงานฉบับนี้ในรอบ Redeploy เอกสารครั้งถัดไป</li>
+    <li><strong>203 Independent Tester Agent:</strong> เมื่อ 202 แก้แล้ว ให้ตรวจซ้ำว่าหน้าเมนูยังแสดงรายการที่มีขายครบ และผู้ใช้ทั่วไปอ่านแถวที่ซ่อนหรือตารางที่ไม่ได้ใช้ผ่าน API ไม่ได้ ตามวิธีที่ได้รับอนุญาต</li>
+    <li>ชุดข้อมูลม็อกวันนี้ยังเป็น 12 แถว, มีขาย 10, รวมราคา 1,781.25 — รอบนี้ไม่ได้เขียนข้อมูล จึงไม่ต้องกู้คืนค่าฐาน</li>
+  </ul>
+</section>
+<footer>
+  จัดทำเมื่อ 19 พ.ย. 2026 ช่วง 14:56–15:05 น. (เวลาไทย, Asia/Bangkok) โดย 204 Web Security Review Agent สำหรับการศึกษา — ปกปิดค่าคีย์ลับ โทเคน และคุกกี้
+</footer>
+</main>
+</body>
+</html>
