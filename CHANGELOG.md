@@ -6,6 +6,7 @@
 - Git deploy ใช้ `.vercelignore` จึงไม่ deploy tester/, db/, Design/Test Case/scripts/, Design/Teaching/ (ยังเก็บใน git)
 - เพิ่ม `Design/Security/US-101_accepted_risks.md`: OBS-04/ACT-29 (PostgREST error ดิบที่ชั้น API) และ ACT-31 (CORS กว้าง, ข้อมูล public read-only) เป็น Accepted Risk โดย 201 ส่วน ACT-05 (ปิด self-signup) ยังรอเจ้าของตั้งค่า `disable_signup=true`
 - เพิ่มผลทดสอบ Run 4 ของ 203 (US-101_test_results_run4_v1.0.html / .json, evidence/run-4/, scripts r4) โดยไม่แก้ไขไฟล์
+- ตรวจว่า Git push เข้า main หลังลิงก์โปรเจกต์ Vercel กับ GitHub repo แล้ว จะทริกเกอร์ auto-deploy จริง
 
 ## v1.0.3 — 2026-11-19 — US-101 web security fixes (ตามรายงาน 204 US-101_web_security_review_v1.0 / US-101_sqli_test_v1.0) — ไม่มีการเปลี่ยน feature/AC
 - AUTHZ-01 (WSR-12/WSR-32): db/004 — policy menu_items_read เปลี่ยนเป็น using (is_available = true) anon/authenticated อ่านเมนูที่ซ่อนผ่าน REST ไม่ได้อีก (migration us101_rls_tighten_read)
