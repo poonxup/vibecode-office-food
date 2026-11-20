@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2.0 — 2026-11-21 — UC03 ยืนยันสั่งซื้อ + ประวัติการสั่งซื้อ (branch `uc03` — ยังไม่ merge เข้า main/Production จนกว่า 203 ส่งผล UC02 run1 ตาม D-UC02-02)
+- ปุ่ม "ยืนยันสั่งซื้อ" ในสรุปรายการ: ปิดเมื่อตะกร้าว่างและระหว่างกำลังบันทึก (กันกดซ้ำ), ต้องล็อกอินก่อน, สำเร็จแล้วบันทึกออเดอร์ ล้างตะกร้า (0 ชิ้น / 0.00 บาท) และแสดงข้อความสำเร็จ; ถ้าผิดพลาดตะกร้าไม่ถูกล้างและแสดงข้อความไทยที่เป็นมิตร (ไม่เผยรายละเอียดระบบ)
+- หน้าประวัติการสั่งซื้อ (`#history`) เรียงใหม่ → เก่า วันเวลา Asia/Bangkok (dd/mm/yyyy HH:mm:ss น.) รายการ จำนวน ราคาต่อหน่วย ยอดรวมบิล รูปแบบ 1,250.00; กดบิลดูรายละเอียด (`#order/<uuid>`) พร้อมยอดรวมบรรทัด; ไม่มีประวัติแสดงข้อความ empty-state; ไม่ล็อกอินไม่แสดงประวัติ; ออกจากระบบล้างข้อมูลประวัติออกจากหน้า
+- เมนูที่ถูกปิดขายระหว่างที่ผู้ใช้เลือก: RPC ปฏิเสธทั้งบิล หน้าเว็บโหลดเมนูใหม่และนำรายการที่ไม่พร้อมขายออกจากตะกร้า
+- DB (db/006, migration `uc03_orders`): ตาราง `orders`, `order_items` + RPC `place_order(items jsonb)` (SECURITY DEFINER, EXECUTE เฉพาะ authenticated). Client ส่งแค่ `menu_item_id` + `qty`; `user_id` = `auth.uid()`; ราคา/ชื่อ/ยอดรวม DB อ่านจาก `menu_items` แล้ว snapshot เอง (ฟิลด์ price/total/user_id ที่ client ส่งมาถูกละเลย). ปฏิเสธตะกร้าว่าง, qty ไม่ใช่จำนวนเต็ม 1–99, เมนูไม่มีจริง, `is_available = false`
+- RLS: SELECT เฉพาะแถวของตนเอง (`auth.uid()`); REVOKE ALL จาก anon/public; authenticated มีแค่ SELECT (ไม่มี INSERT/UPDATE/DELETE ตรง)
+- UC03-OD1: `orders.status` ค่าเริ่มต้น `confirmed` (ชุดค่า confirmed/preparing/completed/cancelled เป็นข้อเสนอของ 202 รอ 201 ยืนยัน; UC03 ใช้เฉพาะ confirmed) · OD2: RPC ชื่อ `place_order` · OD3/OD4: ข้อความและ hash route ตามที่ระบุไว้ข้างต้น
+- ไม่แก้ข้อมูลเมนู baseline (12 / 10 / 1,781.25) และตาราง profiles
+- ไฟล์ใหม่/แก้: db/006_uc03_orders.sql, js/orders.js, js/app.js, js/config.js (1.2.0, UC03), index.html, styles.css, Design/Data_Model.md, README.md
+
 ## v1.1.0 — 2026-11-21 — UC02 เข้าสู่ระบบ (Social Login / ทางสำรอง Email+Password)
 - ผู้ให้บริการที่ใช้จริง: **ลำดับ 3 Email+Password** ด้วยบัญชี mockup ที่ผู้ดูแลสร้างให้ (signup ยังปิดตาม ACT-05)
   - ลำดับ 1 Google OAuth ทำไม่ได้ในรอบนี้: การสร้าง Google Cloud OAuth Client และการเปิด provider ใน Supabase Auth ต้องใช้บัญชีเจ้าของ (Dashboard / Management API) — connector ไม่มีเครื่องมือตั้งค่า Auth และเครื่องนี้ไม่มี Management API token

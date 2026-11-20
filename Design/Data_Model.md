@@ -164,10 +164,50 @@ select 1, id from public.categories where code = 'rice';
 - ไม่มี policy INSERT/DELETE ให้ client; การสร้างแถวทำผ่าน trigger ฝั่งเซิร์ฟเวอร์เท่านั้น
 - รายละเอียดบัญชีทดสอบ (อีเมล, user_id) อยู่ใน `Design/data/UC02_mock_accounts_v1.0.md` (รหัสผ่านไม่อยู่ใน repo)
 
-## 10. แผนตารางคำสั่งซื้อใน UC03 (ยังไม่สร้าง)
+## 10. ตาราง `orders` และ `order_items` — คำสั่งซื้อ (UC03)
 
-เมื่อทำ UC03 จะเพิ่ม `orders` (`id`, `user_id`, `created_at`, `total`, `status`) และ `order_items` โดย `orders.user_id` อ้างอิง `auth.users(id)` (ค่าเดียวกับ `profiles.id` = `auth.uid()`) และมี RLS ให้เห็นเฉพาะแถวของตนเอง
+สร้างด้วย `db/006_uc03_orders.sql` (migration `uc03_orders`)
 
-การบันทึกออเดอร์จะทำผ่าน RPC เท่านั้น โดยรับจาก client แค่ `menu_item_id` + `qty` — **ฝั่งฐานข้อมูล** เป็นคนอ่านราคาจาก `menu_items`, คำนวณยอด, snapshot ชื่อ/ราคา และใส่ `user_id` จาก `auth.uid()` เอง ไม่ใช้ราคาหรือ user_id ที่ client ส่งมาเป็นแหล่งความจริง
+**`orders`** — หัวบิล 1 แถว = 1 คำสั่งซื้อ
 
-`anon` จะไม่มีสิทธิ์เข้าถึง `orders` / `order_items`
+| คอลัมน์ | ชนิด | บังคับ | ค่าเริ่มต้น | ความหมาย / เงื่อนไข |
+|---|---|---|---|---|
+| id | uuid (PK) | ✔ | gen_random_uuid() | รหัสบิล (สุ่ม เดายาก) |
+| user_id | uuid (FK → auth.users.id, ON DELETE CASCADE) | ✔ | – | เจ้าของบิล = `auth.uid()` ที่ RPC ใส่ให้เอง (ค่าเดียวกับ profiles.id) |
+| created_at | timestamptz | ✔ | now() | เวลาที่บันทึก (หน้าเว็บแสดง Asia/Bangkok) |
+| total | numeric(10,2) | ✔ | – | ยอดรวมบิล = ผลรวม `line_total` คำนวณใน DB (CHECK > 0) |
+| status | text | ✔ | `confirmed` | CHECK ใน (`confirmed`, `preparing`, `completed`, `cancelled`) ดูตารางด้านล่าง |
+
+| status | ความหมาย | ใช้ใน UC03 |
+|---|---|---|
+| confirmed | ยืนยันสั่งซื้อแล้ว (ค่าเริ่มต้น) | ✔ ค่าเดียวที่ใช้ |
+| preparing | กำลังเตรียมอาหาร | สำรองอนาคต |
+| completed | ส่งมอบแล้ว | สำรองอนาคต |
+| cancelled | ยกเลิก | สำรองอนาคต |
+
+(UC03-OD1: ชุดค่านี้เป็นข้อเสนอของ 202 รอ 201 ยืนยัน; UC03 ไม่มี workflow เปลี่ยนสถานะ)
+
+**`order_items`** — รายการในบิล (ความสัมพันธ์ M:N ระหว่างบิลกับเมนู)
+
+| คอลัมน์ | ชนิด | บังคับ | ความหมาย / เงื่อนไข |
+|---|---|---|---|
+| id | bigint identity (PK) | ✔ | ลำดับการบันทึก ใช้เรียงรายการในบิล |
+| order_id | uuid (FK → orders.id, ON DELETE CASCADE) | ✔ | บิลที่รายการนี้อยู่ |
+| menu_item_id | integer (FK → menu_items.id, ON DELETE RESTRICT) | ✔ | เมนูที่สั่ง (เมนูที่เคยถูกสั่งลบไม่ได้ ให้ตั้ง `is_available=false`) |
+| name_snapshot | text | ✔ | ชื่อเมนู ณ เวลาสั่ง |
+| unit_price_snapshot | numeric(10,2) | ✔ | ราคาต่อหน่วย ณ เวลาสั่ง (CHECK > 0) |
+| qty | integer | ✔ | จำนวน CHECK 1–99 |
+| line_total | numeric(10,2) | ✔ | CHECK = `unit_price_snapshot * qty` |
+
+ข้อจำกัดเพิ่ม: UNIQUE (`order_id`, `menu_item_id`) — เมนูเดียวกันในบิลเดียวมี 1 บรรทัด (RPC รวมบรรทัดซ้ำให้). Index: `orders(user_id, created_at desc)`, `order_items(order_id)`, `order_items(menu_item_id)`
+
+**RPC `public.place_order(items jsonb) returns uuid`** (ชื่อกำหนดตาม UC03-OD2)
+- รับ `[{"menu_item_id": <int>, "qty": <int 1-99>}, ...]` เท่านั้น ฟิลด์อื่น (price, total, user_id ฯลฯ) ถูกละเลย
+- SECURITY DEFINER, `search_path = public`; EXECUTE เฉพาะ `authenticated` (REVOKE จาก public/anon)
+- `user_id = auth.uid()` (ไม่ล็อกอิน → ปฏิเสธ); DB อ่านราคา/ชื่อจาก `menu_items` แล้ว snapshot + คำนวณ `line_total`/`total` เอง
+- ปฏิเสธทั้งบิล (ไม่มีแถวค้าง) เมื่อ: ตะกร้าว่าง, items ไม่ใช่ array หรือเกิน 50 บรรทัด, qty ไม่ใช่จำนวนเต็ม 1–99 (รวม 0, ลบ, ทศนิยม, ข้อความ), เมนูไม่มีจริง, เมนู `is_available = false`
+- Error: SQLSTATE `P0001` + `DETAIL` เป็นรหัส `UC03_NOT_LOGGED_IN | UC03_EMPTY_CART | UC03_BAD_ITEMS | UC03_BAD_QTY | UC03_ITEM_NOT_FOUND | UC03_ITEM_UNAVAILABLE` หน้าเว็บแปลงเป็นข้อความไทยที่เป็นมิตร
+
+**สิทธิ์และ RLS:** RLS เปิดทั้งสองตาราง; `authenticated` มีเฉพาะ `SELECT` — `orders` เห็นแถวที่ `user_id = auth.uid()`, `order_items` เห็นเฉพาะรายการของบิลที่เป็นของตน; `anon` ไม่มีสิทธิ์ใด ๆ (REVOKE ALL); ไม่มี INSERT/UPDATE/DELETE ตรงให้ client (เขียนผ่าน RPC เท่านั้น)
+
+**เส้นทางหน้าเว็บ (UC03-OD4):** `#history` = ประวัติ, `#order/<uuid>` = รายละเอียดบิล (ต้องล็อกอิน; บิลที่ไม่ใช่ของตนจะได้ผลเหมือนไม่มีบิล)

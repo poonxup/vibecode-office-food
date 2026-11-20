@@ -1,7 +1,7 @@
 # Office Food Ordering
 
 Web App สั่งอาหารในออฟฟิศ: แสดงเมนู + ราคา (บาท) ให้เลือก และแสดงสรุปรายการที่สั่ง
-เวอร์ชัน **1.1.0** — UC02 เข้าสู่ระบบ (ทางสำรอง Email+Password) + US-101 ยังใช้ได้เช่นเดิม
+เวอร์ชัน **1.2.0** (branch `uc03`, ยังไม่ขึ้น Production — Production ยังเป็น 1.1.0) — UC03 ยืนยันสั่งซื้อ + ประวัติการสั่งซื้อ; UC02 เข้าสู่ระบบ และ US-101 ยังใช้ได้เช่นเดิม
 
 - Hosting: Vercel (static site, ไม่มี build) — project `vibecode-office-food`, team rattakorn-1187
 - Database: Supabase project `vibecode-office-food` (ref `yhcjsgbffgabsmsybnle`, ap-southeast-1), schema `public`
@@ -14,6 +14,7 @@ styles.css            สไตล์ (responsive มือถือ ≥360px / 
 js/config.js          ชื่อแอป, เวอร์ชัน, Supabase URL + publishable key, AUTH_PROVIDERS
 js/auth.js            ล็อกอิน OAuth/PKCE + Email+Password, ออกจากระบบ, ตัวช่วย requireAuth สำหรับ UC03
 js/vendor/            supabase-js 2.119.2 แบบไฟล์เดียว (CSP script-src 'self')
+js/orders.js          UC03: เรียก RPC place_order, อ่านประวัติ/รายละเอียดบิล (RLS), จัดรูปแบบวันเวลา Asia/Bangkok, แปลง error เป็นข้อความไทย
 js/cart.js            logic ตะกร้า (pure functions, ทดสอบด้วย Node ได้)
 js/app.js             โหลดเมนูจาก Supabase REST, แสดงผล, ข้อความ error ภาษาไทย, UI ล็อกอิน
 db/001_*.sql          โครงสร้างตารางเมนู + RLS + comment
@@ -21,6 +22,7 @@ db/002_*.sql          ข้อมูลตัวอย่าง (categories app
 db/003_*.sql          ถอนสิทธิ์เขียนจาก anon/authenticated (เหลือ SELECT) — v1.0.2
 db/004_*.sql          RLS: menu_items อ่านได้เฉพาะ is_available = true; ปิดการอ่าน categories / menu_item_categories — v1.0.3
 db/005_*.sql          ตาราง profiles + trigger + backfill บัญชีที่มีอยู่แล้ว — v1.1.0 UC02
+db/006_*.sql          ตาราง orders, order_items + RLS + RPC place_order — v1.2.0 UC03
 vercel.json           Security headers ทุก route (CSP แอป / CSP แยกสำหรับ /Design/*, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS)
 .vercelignore         ไฟล์ที่ไม่ deploy (db/, Design/Test Case/scripts/, Design/Teaching/, tester/)
 Design/               เอกสารโครงการ (Story, Data Model, Mock Data, Test Cases/Results, Bug Reports)
@@ -82,3 +84,8 @@ Deploy อัตโนมัติจาก GitHub: push เข้า branch `ma
 ## ฐานข้อมูล
 
 ดูรายละเอียดใน `Design/Data_Model.md` — แก้/เพิ่มเมนูที่ตาราง `menu_items` ผ่าน Supabase Dashboard ได้ทันที ไม่ต้อง Deploy ใหม่
+
+## ยืนยันสั่งซื้อและประวัติ (UC03, v1.2.0)
+- ปุ่ม "ยืนยันสั่งซื้อ" ในสรุปรายการ: ต้องล็อกอิน, ปิดเมื่อตะกร้าว่าง, บันทึกผ่าน RPC `place_order` เท่านั้น (ส่งแค่ `menu_item_id` + `qty`; ราคา/ยอดรวม/เจ้าของบิล DB กำหนดเอง)
+- ประวัติ: ปุ่ม "ประวัติการสั่งซื้อ" หลังล็อกอิน (`#history`), รายละเอียดบิล `#order/<uuid>`
+- Security: RLS ตาม `auth.uid()`, anon ไม่มีสิทธิ์ orders/order_items, ไม่มี INSERT/UPDATE/DELETE ตรง — รายละเอียดใน `Design/Data_Model.md` หัวข้อ 10

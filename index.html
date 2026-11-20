@@ -37,13 +37,16 @@
       </div>
       <div class="sum-actions">
         <p id="order-guard" class="order-guard" role="status" hidden></p>
+        <p id="order-success" class="order-success" role="status" hidden></p>
         <button type="button" class="btn-confirm" id="btn-confirm" disabled>ยืนยันสั่งซื้อ</button>
       </div>
     </aside>
   </main>
   <section id="history" class="history-panel" hidden>
     <h2>ประวัติการสั่งซื้อ</h2>
-    <p id="history-msg" class="history-msg"></p>
+    <p id="history-msg" class="history-msg" role="status"></p>
+    <ul id="history-list" class="history-list"></ul>
+    <div id="history-detail" class="history-detail" hidden></div>
     <button type="button" class="btn-secondary" id="history-back">กลับไปเลือกเมนู</button>
   </section>
   <footer class="footer"><span id="app-version"></span></footer>
