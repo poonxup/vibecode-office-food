@@ -12,8 +12,13 @@
 <body>
   <header class="hero">
     <div class="hero-inner">
-      <h1>🍱 <span id="app-name">Office Food Ordering</span></h1>
-      <p>เลือกเมนูที่ชอบ แล้วดูสรุปรายการได้ทันที</p>
+      <div class="hero-top">
+        <div class="hero-title">
+          <h1>🍱 <span id="app-name">Office Food Ordering</span></h1>
+          <p>เลือกเมนูที่ชอบ แล้วดูสรุปรายการได้ทันที</p>
+        </div>
+        <div id="auth-bar" class="auth-bar"></div>
+      </div>
     </div>
     <a href="#summary" class="cart-pill" aria-label="ไปที่สรุปรายการ">🛒 <span id="cart-badge">0</span></a>
   </header>
@@ -30,8 +35,17 @@
         <div><span>จำนวนรวม</span><b id="sum-qty">0 ชิ้น</b></div>
         <div class="grand"><span>ราคารวมทั้งหมด</span><b id="sum-total">0.00 บาท</b></div>
       </div>
+      <div class="sum-actions">
+        <p id="order-guard" class="order-guard" role="status" hidden></p>
+        <button type="button" class="btn-confirm" id="btn-confirm" disabled>ยืนยันสั่งซื้อ</button>
+      </div>
     </aside>
   </main>
+  <section id="history" class="history-panel" hidden>
+    <h2>ประวัติการสั่งซื้อ</h2>
+    <p id="history-msg" class="history-msg"></p>
+    <button type="button" class="btn-secondary" id="history-back">กลับไปเลือกเมนู</button>
+  </section>
   <footer class="footer"><span id="app-version"></span></footer>
   <script type="module" src="js/app.js"></script>
 </body>

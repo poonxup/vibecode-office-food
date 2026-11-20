@@ -1,15 +1,28 @@
-# Data Model — Office Food Ordering (US-101)
+# Data Model — Office Food Ordering (US-101 + UC02)
 
-- เวอร์ชันเอกสาร: 1.0 (App v1.0.0, req v1.1) | ผู้จัดทำ: 202 Dev | วันที่: 2026-11-18
-- Supabase project: `vibecode-office-food` (ref `yhcjsgbffgabsmsybnle`, region ap-southeast-1) | schema: `public`
-- ไฟล์ SQL: `db/001_us101_menu_schema.sql` (โครงสร้าง), `db/002_us101_seed_sample.sql` (ข้อมูลตัวอย่าง)
+- เวอร์ชันเอกสาร: 1.1 (App v1.1.0, UC02) | ผู้จัดทำ: 202 Dev | วันที่: 2026-11-21
+- Supabase project: `vibecode-office-food` (ref `yhcjsgbffgabsmsybnle`, region ap-southeast-1) | schema: `public` + `auth` (ผู้ใช้)
+- ไฟล์ SQL: `db/001_us101_menu_schema.sql` (โครงสร้างเมนู), `db/002_us101_seed_sample.sql` (ข้อมูลตัวอย่าง), `db/003`–`db/004` (สิทธิ์/RLS เมนู), `db/005_uc02_profiles.sql` (โปรไฟล์ผู้ใช้ UC02)
 
 ## 1. ภาพรวม (ER Diagram)
 
 ```mermaid
 erDiagram
+    auth_users ||--|| profiles : "มีโปรไฟล์"
     menu_items ||--o{ menu_item_categories : "อยู่ในหมวด"
     categories ||--o{ menu_item_categories : "มีเมนู"
+    auth_users {
+        uuid id PK
+        text email
+        timestamptz email_confirmed_at
+        jsonb raw_user_meta_data
+    }
+    profiles {
+        uuid id PK_FK
+        text display_name
+        text email
+        timestamptz created_at
+    }
     menu_items {
         int id PK
         text name "บังคับ"
@@ -39,6 +52,8 @@ erDiagram
 
 ความสัมพันธ์: **menu_items ↔ categories เป็น Many-to-Many** ผ่านตารางเชื่อม `menu_item_categories`
 (1 เมนูอยู่ได้หลายหมวด, 1 หมวดมีได้หลายเมนู) — เตรียมไว้สำหรับอนาคต
+
+ความสัมพันธ์เพิ่ม (UC02): **`auth.users` (schema `auth`, จัดการโดย Supabase Auth) 1-1 กับ `public.profiles`** — `profiles.id` อ้างอิง `auth.users.id` และลบตามเมื่อลบบัญชี (ON DELETE CASCADE). ในแผนของ UC03 ตาราง `orders.user_id` จะอ้างอิง `auth.users(id)` ซึ่งมีค่าเดียวกับ `profiles.id` และ `auth.uid()` — ยังไม่สร้างในเวอร์ชันนี้
 
 > **US-101 หน้าเว็บใช้เฉพาะตาราง `menu_items` (รวมคอลัมน์ข้อความ `category`)** ยังไม่อ่าน `categories` / `menu_item_categories`
 
@@ -130,3 +145,29 @@ select 1, id from public.categories where code = 'rice';
 - `db/002_us101_seed_sample.sql`: ส่วน categories **apply แล้ว**; ส่วน menu_items 6 แถว **ไม่ได้ apply โดยตั้งใจ**
 - `menu_items` ใน Production ว่างไว้ให้ 203 Tester import Mock Data (`Design/data/menu_items.csv/.json`, 12 แถว) เพื่อใช้เทียบ AC1
 - รายการที่ผู้ใช้เลือก (ตะกร้า) **ไม่เก็บในฐานข้อมูล** เก็บใน memory ของหน้าเว็บเท่านั้น รีเฟรชแล้วล้าง (BA-C2)
+
+## 9. ตาราง `profiles` — โปรไฟล์ผู้ใช้ (UC02)
+
+สร้างด้วย `db/005_uc02_profiles.sql` (migration `uc02_profiles`) เพื่อเก็บชื่อที่แสดงและอีเมลของผู้ใช้ที่ล็อกอินแล้ว
+
+| คอลัมน์ | ชนิด | บังคับ | ค่าเริ่มต้น | ความหมาย / เงื่อนไข |
+|---|---|---|---|---|
+| id | uuid (PK, FK → auth.users.id) | ✔ | – | รหัสผู้ใช้ ค่าเดียวกับ `auth.uid()` ลบผู้ใช้แล้วแถวนี้ถูกลบตาม (CASCADE) |
+| display_name | text | – | จาก metadata / ส่วนหน้าของอีเมล | ชื่อที่แสดงบนหน้าเว็บ |
+| email | text | – | จาก `auth.users.email` | อีเมลของบัญชี ซิงก์ตอนสร้างแถว |
+| created_at | timestamptz | ✔ | now() | เวลาที่สร้างโปรไฟล์ |
+
+- Trigger `on_auth_user_created` บน `auth.users` เรียกฟังก์ชัน `public.handle_new_user()` (SECURITY DEFINER, `search_path` ว่าง) เพื่อสร้างแถวอัตโนมัติเมื่อมีผู้ใช้ใหม่
+- Migration เดียวกัน **backfill** โปรไฟล์ให้บัญชีที่มีอยู่แล้ว (บัญชีทดสอบ user A / user B ที่ 203 สร้างไว้ก่อนมีตาราง)
+- RLS: ผู้ใช้ที่ล็อกอิน (`authenticated`) `SELECT` / `UPDATE` ได้เฉพาะแถว `id = auth.uid()` — การอัปเดตจำกัดที่คอลัมน์ `display_name` เท่านั้น
+- `anon` ไม่มีสิทธิ์ใด ๆ (REVOKE ALL) — เรียก REST โดยไม่ล็อกอินต้องไม่ได้ข้อมูล
+- ไม่มี policy INSERT/DELETE ให้ client; การสร้างแถวทำผ่าน trigger ฝั่งเซิร์ฟเวอร์เท่านั้น
+- รายละเอียดบัญชีทดสอบ (อีเมล, user_id) อยู่ใน `Design/data/UC02_mock_accounts_v1.0.md` (รหัสผ่านไม่อยู่ใน repo)
+
+## 10. แผนตารางคำสั่งซื้อใน UC03 (ยังไม่สร้าง)
+
+เมื่อทำ UC03 จะเพิ่ม `orders` (`id`, `user_id`, `created_at`, `total`, `status`) และ `order_items` โดย `orders.user_id` อ้างอิง `auth.users(id)` (ค่าเดียวกับ `profiles.id` = `auth.uid()`) และมี RLS ให้เห็นเฉพาะแถวของตนเอง
+
+การบันทึกออเดอร์จะทำผ่าน RPC เท่านั้น โดยรับจาก client แค่ `menu_item_id` + `qty` — **ฝั่งฐานข้อมูล** เป็นคนอ่านราคาจาก `menu_items`, คำนวณยอด, snapshot ชื่อ/ราคา และใส่ `user_id` จาก `auth.uid()` เอง ไม่ใช้ราคาหรือ user_id ที่ client ส่งมาเป็นแหล่งความจริง
+
+`anon` จะไม่มีสิทธิ์เข้าถึง `orders` / `order_items`

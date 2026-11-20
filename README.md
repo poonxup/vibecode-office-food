@@ -1,7 +1,7 @@
 # Office Food Ordering
 
 Web App สั่งอาหารในออฟฟิศ: แสดงเมนู + ราคา (บาท) ให้เลือก และแสดงสรุปรายการที่สั่ง
-เวอร์ชัน **1.0.3** — US-101 (req v1.1) + security fixes
+เวอร์ชัน **1.1.0** — UC02 เข้าสู่ระบบ (ทางสำรอง Email+Password) + US-101 ยังใช้ได้เช่นเดิม
 
 - Hosting: Vercel (static site, ไม่มี build) — project `vibecode-office-food`, team rattakorn-1187
 - Database: Supabase project `vibecode-office-food` (ref `yhcjsgbffgabsmsybnle`, ap-southeast-1), schema `public`
@@ -9,15 +9,18 @@ Web App สั่งอาหารในออฟฟิศ: แสดงเม�
 ## โครงสร้าง
 
 ```
-index.html            หน้าเว็บหลัก
+index.html            หน้าเว็บหลัก (มีแถบเข้าสู่ระบบ, ปุ่มยืนยันสั่งซื้อแบบกันสถานะล็อกอิน)
 styles.css            สไตล์ (responsive มือถือ ≥360px / เดสก์ท็อป)
-js/config.js          ชื่อแอป, เวอร์ชัน, Supabase URL + publishable key (ปลอดภัยฝั่งเบราว์เซอร์, RLS อ่านอย่างเดียว)
+js/config.js          ชื่อแอป, เวอร์ชัน, Supabase URL + publishable key, AUTH_PROVIDERS
+js/auth.js            ล็อกอิน OAuth/PKCE + Email+Password, ออกจากระบบ, ตัวช่วย requireAuth สำหรับ UC03
+js/vendor/            supabase-js 2.119.2 แบบไฟล์เดียว (CSP script-src 'self')
 js/cart.js            logic ตะกร้า (pure functions, ทดสอบด้วย Node ได้)
-js/app.js             โหลดเมนูจาก Supabase REST, แสดงผล, ข้อความ error ภาษาไทย
-db/001_*.sql          โครงสร้างตาราง + RLS + comment
+js/app.js             โหลดเมนูจาก Supabase REST, แสดงผล, ข้อความ error ภาษาไทย, UI ล็อกอิน
+db/001_*.sql          โครงสร้างตารางเมนู + RLS + comment
 db/002_*.sql          ข้อมูลตัวอย่าง (categories apply แล้ว, menu_items ไม่ apply)
 db/003_*.sql          ถอนสิทธิ์เขียนจาก anon/authenticated (เหลือ SELECT) — v1.0.2
 db/004_*.sql          RLS: menu_items อ่านได้เฉพาะ is_available = true; ปิดการอ่าน categories / menu_item_categories — v1.0.3
+db/005_*.sql          ตาราง profiles + trigger + backfill บัญชีที่มีอยู่แล้ว — v1.1.0 UC02
 vercel.json           Security headers ทุก route (CSP แอป / CSP แยกสำหรับ /Design/*, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS)
 .vercelignore         ไฟล์ที่ไม่ deploy (db/, Design/Test Case/scripts/, Design/Teaching/, tester/)
 Design/               เอกสารโครงการ (Story, Data Model, Mock Data, Test Cases/Results, Bug Reports)
@@ -54,6 +57,27 @@ Deploy อัตโนมัติจาก GitHub: push เข้า branch `ma
 - (v1.0.3) anon อ่านได้เฉพาะเมนูที่ is_available = true (บังคับที่ RLS) และอ่าน categories / menu_item_categories ไม่ได้
 - (v1.0.3) ห้ามแสดงข้อความ error ดิบจากเซิร์ฟเวอร์บนหน้าจอ ให้ใช้ข้อความไทยทั่วไป และ log รายละเอียดที่ console.error
 - ความเสี่ยงที่ยอมรับและรายการที่รอแก้ด้วยการตั้งค่า: ดู `Design/Security/US-101_accepted_risks.md`
+- (v1.1.0) ล็อกอินใช้ publishable key + PKCE เท่านั้น ห้ามใส่ service_role ในโค้ดฝั่ง client; ตาราง `profiles` อ่านได้เฉพาะเจ้าของแถว และ anon เข้าไม่ถึง
+
+
+## เข้าสู่ระบบ (UC02)
+
+ทางที่ใช้งานได้ในเวอร์ชันนี้คือ **Email+Password** ด้วยบัญชีที่ผู้ดูแลสร้างให้ (ไม่เปิดสมัครเอง, ACT-05 ยังปิด)
+
+- ดูเมนูและใช้สรุปรายการได้โดยไม่ต้องล็อกอิน (พฤติกรรม US-101 เหมือนเดิม)
+- ปุ่ม "เข้าสู่ระบบด้วย Google" มีและเดินสาย OAuth 2.0 + PKCE ไว้แล้ว แต่ยังไม่พร้อมจนกว่าเจ้าของจะเปิด Google provider ใน Supabase Dashboard
+- หลังล็อกอินแสดงชื่อ/อีเมลและปุ่มออกจากระบบ; ออกจากระบบแล้วเซสชันถูกยกเลิกจริง
+- ปุ่ม "ยืนยันสั่งซื้อ" และ "ประวัติการสั่งซื้อ" ต้องล็อกอินก่อน (ยังไม่บันทึกออเดอร์ — อยู่ใน UC03)
+- บัญชีทดสอบ: ดู `Design/data/UC02_mock_accounts_v1.0.md` (รหัสผ่านไม่อยู่ใน repo)
+
+วิธีเปิด Google OAuth เมื่อเจ้าของพร้อม (แล้วตั้ง `AUTH_PROVIDERS.google = true` ใน `js/config.js` แล้ว push):
+
+1. Google Cloud Console → สร้าง OAuth Client ชนิด Web application
+2. Authorized JavaScript origins: `https://yhcjsgbffgabsmsybnle.supabase.co`
+3. Authorized redirect URIs: `https://yhcjsgbffgabsmsybnle.supabase.co/auth/v1/callback`
+4. Supabase Dashboard → Authentication → Providers → Google: เปิดแล้วใส่ Client ID / Secret
+5. Authentication → URL Configuration: Site URL = `https://vibecode-office-food.vercel.app` และอนุญาต Redirect เฉพาะโดเมนของเรา (`https://vibecode-office-food.vercel.app/**` และ Vercel Preview ของโปรเจกต์นี้)
+6. คง "Allow new users to sign up" ปิดไว้ตาม ACT-05
 
 ## ฐานข้อมูล
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.1.0 — 2026-11-21 — UC02 เข้าสู่ระบบ (Social Login / ทางสำรอง Email+Password)
+- ผู้ให้บริการที่ใช้จริง: **ลำดับ 3 Email+Password** ด้วยบัญชี mockup ที่ผู้ดูแลสร้างให้ (signup ยังปิดตาม ACT-05)
+  - ลำดับ 1 Google OAuth ทำไม่ได้ในรอบนี้: การสร้าง Google Cloud OAuth Client และการเปิด provider ใน Supabase Auth ต้องใช้บัญชีเจ้าของ (Dashboard / Management API) — connector ไม่มีเครื่องมือตั้งค่า Auth และเครื่องนี้ไม่มี Management API token
+  - ลำดับ 2 GitHub OAuth ติดบล็อกเดียวกัน (สร้าง GitHub OAuth App ต้องใช้เว็บ UI และต้องเปิด provider ใน Supabase Dashboard)
+- ปุ่ม "เข้าสู่ระบบด้วย Google" มีบนหน้าเว็บและเดินสาย `signInWithOAuth({ provider: 'google' })` แบบ OAuth 2.0 + PKCE (`flowType: 'pkce'`, `redirectTo` เป็น origin ปัจจุบัน) ไว้แล้ว แต่ยังแสดงว่าไม่พร้อมใช้งานจนกว่าเจ้าของจะเปิด provider (`AUTH_PROVIDERS.google = false` ใน `js/config.js`)
+- มีฟอร์มเข้าสู่ระบบด้วยอีเมล+รหัสผ่าน (เฉพาะเข้าสู่ระบบ ไม่มีฟอร์มสมัครสมาชิก)
+- หลังล็อกอินแสดงชื่อ/อีเมลและปุ่มออกจากระบบ; `signOut({ scope: 'global' })` แล้วยกเลิกเซสชันและล้างที่เก็บในเบราว์เซอร์ กดย้อนกลับหรือรีเฟรชแล้วไม่กลับเข้าสู่ระบบเดิม
+- หลัง callback ลบ `code` / token ออกจาก URL ด้วย `history.replaceState`
+- ท่องเมนูและใช้สรุปรายการตาม US-101 ได้โดยไม่ต้องล็อกอิน; ปุ่ม "ยืนยันสั่งซื้อ" และ "ประวัติการสั่งซื้อ" เป็นตัวกัน (ยังไม่ล็อกอินจะถูกขอให้ล็อกอิน, ล็อกอินแล้วจะแจ้งว่าพร้อมใน UC03) — ยังไม่บันทึกออเดอร์
+- เพิ่มตาราง `public.profiles` (db/005, migration `uc02_profiles`) + trigger สร้างโปรไฟล์เมื่อมีผู้ใช้ใหม่ + backfill บัญชีที่มีอยู่แล้ว; RLS ให้เห็นเฉพาะแถวของตนเอง; anon ไม่มีสิทธิ์
+- vendor `@supabase/supabase-js` 2.119.2 ที่ `js/vendor/supabase.js` เพื่อให้ CSP `script-src 'self'` ยังใช้ได้ (ไม่เพิ่ม CDN)
+- CSP ยังเชื่อมต่อได้เฉพาะโดเมน Supabase เดิม ไม่เปิดโดเมนใหม่ที่ไม่จำเป็น
+- บัญชีทดสอบ user A / user B สร้างโดย 203 (ดู `Design/data/UC02_mock_accounts_v1.0.md`) รหัสผ่านไม่อยู่ใน repo
+
+
 ## docs — 2026-11-19 — Deploy อัตโนมัติจาก GitHub (ยังเป็น v1.0.3 ไม่มีการแก้โค้ดแอป/DB)
 - Deploy ขึ้น Production อัตโนมัติเมื่อ push เข้า branch `main` ของ GitHub `poonxup/vibecode-office-food` ผ่าน Vercel Git integration — ไม่ต้อง deploy ผ่าน Vercel API อีกต่อไป
 - ก่อนหน้านี้ Git deploy ของ commit 33a339a ล้มเหลว (errorCode `git_info_fail`) เพราะ Vercel GitHub App ยังไม่มีสิทธิ์เข้าถึง repo — เจ้าของให้สิทธิ์แล้ว (201 ยืนยัน Git deploy ของ 2f7d9fe = READY)

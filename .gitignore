@@ -1,2 +1,7 @@
 tester/
 node_modules/
+
+# local secrets (never commit)
+.env
+.env.*
+secrets/
